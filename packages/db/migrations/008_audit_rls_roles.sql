@@ -45,7 +45,7 @@ REVOKE INSERT, UPDATE, DELETE ON expiry_lot FROM app_rw;
 REVOKE UPDATE, DELETE ON audit_log FROM app_rw;
 REVOKE UPDATE, DELETE ON price_history FROM app_rw;
 REVOKE INSERT, UPDATE, DELETE ON permission_history FROM app_rw;
-GRANT DELETE ON zone_category, product_supplier, role_permission, user_site_role, import_row TO app_rw;
+GRANT DELETE ON zone_category, product_supplier, role_permission, user_site_role, import_row, sync_applied, barcode TO app_rw;
 GRANT DELETE ON audit_log TO app_admin;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT ON TABLES TO app_ro;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO app_admin;

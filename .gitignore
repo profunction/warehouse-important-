@@ -6,3 +6,5 @@ packages/app/dev-dist/
 test-results/
 playwright-report/
 uploads/
+packages/server/fonts/
+packages/server/scratch/

@@ -54,6 +54,9 @@ importers:
 
   packages/db:
     dependencies:
+      argon2:
+        specifier: ^0.41.1
+        version: 0.41.1
       pg:
         specifier: ^8.13.1
         version: 8.23.1
