@@ -95,7 +95,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.get('/me', { preHandler: requireAuth }, async (req) => {
     const ctx = req.ctx;
     return withCompany({ companyId: ctx.companyId, userId: ctx.userId }, async (tx) => {
-      const u = (await tx.query(`SELECT id, name, language, font_scale, photo_url, is_super_admin, badge_code FROM app_user WHERE id = $1`, [ctx.userId])).rows[0];
+      const u = (await adminPool.query(`SELECT id, name, language, font_scale, photo_url, is_super_admin, badge_code FROM app_user WHERE id = $1`, [ctx.userId])).rows[0];
       const c = (await tx.query(`SELECT id, name, short_code, plan, settings, feature_flags FROM company WHERE id = $1`, [ctx.companyId])).rows[0];
       const site = ctx.siteId ? (await tx.query(`SELECT id, code, name, type FROM site WHERE id = $1`, [ctx.siteId])).rows[0] : null;
       const sites = await sitesFor(ctx.userId, ctx.companyId);

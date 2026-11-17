@@ -8,3 +8,7 @@ playwright-report/
 uploads/
 packages/server/fonts/
 packages/server/scratch/
+e2e/node_modules/
+e2e/*.xlsx
+e2e/shots/w-error.png
+e2e/shots/error.png

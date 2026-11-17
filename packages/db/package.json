@@ -6,7 +6,7 @@
   "scripts": {
     "migrate": "node scripts/migrate.mjs",
     "reset": "node scripts/migrate.mjs --reset",
-    "test": "node scripts/migrate.mjs --reset && node scripts/test.mjs",
+    "test": "DATABASE_NAME=warehouse_test node scripts/migrate.mjs --reset && DATABASE_NAME=warehouse_test node scripts/test.mjs",
     "build": "echo ok",
     "typecheck": "echo ok"
   },

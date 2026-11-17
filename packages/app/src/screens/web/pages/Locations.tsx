@@ -23,6 +23,9 @@ export default function Locations() {
       setMsg('已保存');
     } catch (e: any) { setMsg(e?.code === 'LOCATION_HAS_STOCK' ? `货位 ${editZone.code}-${String(e.body?.detail?.rack).padStart(2, '0')}-${e.body?.detail?.level} 里还有库存，不能删。请先把货移走。` : errText(e)); }
   };
+  const startEdit = async (z: any) => {
+    try { const ls: any[] = await api(`/locations?zone=${z.id}`); setEditZone({ ...z, racks: Math.max(1, ...ls.map((l) => Number(l.rack) || 0)), levels: Math.max(1, ...ls.map((l) => Number(l.level) || 0)), allowed_category_ids: z.allowed_category_ids ?? [] }); } catch (e) { setMsg(errText(e)); }
+  };
   const saveSite = async () => { try { await api('/sites', { body: newSite }); setNewSite(null); setSites(await api('/sites')); setMsg('站点已建'); } catch (e) { setMsg(errText(e)); } };
   const toggleCat = (id: string) => setEditZone({ ...editZone, allowed_category_ids: editZone.allowed_category_ids.includes(id) ? editZone.allowed_category_ids.filter((x: string) => x !== id) : [...editZone.allowed_category_ids, id] });
   return (
@@ -56,7 +59,7 @@ export default function Locations() {
         <thead><tr><th>区</th><th>名称</th><th>类型</th><th>允许类别</th><th>货位数</th><th>硬限制</th><th></th></tr></thead>
         <tbody>{zones.map((z) => <tr key={z.id} style={{ background: sel?.id === z.id ? '#EEF6FF' : undefined }}>
           <td><span className="pill" style={{ background: z.color }}>{z.code}</span></td><td>{z.name_zh ?? ''}</td><td>{ZONE_TYPE_ZH[z.zone_type]}</td><td>{(z.allowed_category_ids ?? []).map((id: string) => cats.find((c) => c.id === id)?.name_zh ?? '').filter(Boolean).join('、') || '全部'}</td><td>{z.location_count}</td><td>{z.allowed_is_hard ? '是' : '否'}</td>
-          <td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-ghost" onClick={() => openZone(z)}>货位</button> {has('label.print') && <button className="btn btn-ghost" onClick={() => labels(z)}>打印标签</button>} {canManage && <button className="btn btn-ghost" onClick={() => setEditZone({ ...z, racks: Math.max(...[1, ...zones.filter((x) => x.id === z.id).map(() => 0)]), levels: 1, allowed_category_ids: z.allowed_category_ids ?? [] })}>编辑</button>}</td>
+          <td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-ghost" onClick={() => openZone(z)}>货位</button> {has('label.print') && <button className="btn btn-ghost" onClick={() => labels(z)}>打印标签</button>} {canManage && <button className="btn btn-ghost" onClick={() => startEdit(z)}>编辑</button>}</td>
         </tr>)}</tbody>
       </table>
       {sel && <>

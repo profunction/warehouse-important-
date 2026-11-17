@@ -170,7 +170,7 @@ export async function adminRoutes(app: FastifyInstance) {
 
   // ---------- 超管：公司 ----------
   app.get('/admin/companies', { preHandler: requireSuperAdmin() }, async () => withAdmin(async (tx) => (await tx.query(
-    `SELECT c.id, c.name, c.short_code, c.plan, c.is_active, c.created_at,
+    `SELECT c.id, c.name, c.short_code, c.plan, c.is_active, c.created_at, c.feature_flags,
        (SELECT count(*) FROM product p WHERE p.company_id = c.id AND p.is_active) AS products,
        (SELECT count(*) FROM app_user u WHERE u.company_id = c.id AND u.is_active) AS users,
        (SELECT count(*) FROM movement m WHERE m.company_id = c.id AND m.performed_at > now() - interval '7 days') AS movements_7d,

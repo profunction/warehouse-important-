@@ -2,7 +2,7 @@
 # 重置开发库 → 重启服务器 → 建示范数据
 set -e
 cd "$(dirname "$0")/.."
-pkill -f "tsx src/index.ts" || true
+(fuser -k 3000/tcp || true) 2>/dev/null; sleep 1
 node packages/db/scripts/migrate.mjs --reset > /dev/null
 node packages/db/scripts/bootstrap-admin.mjs admin@demo.local 123456 "系统管理员" > /dev/null
 (pnpm --filter @wh/server start > /tmp/wh-server.log 2>&1 &)

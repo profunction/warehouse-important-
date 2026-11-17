@@ -34,10 +34,12 @@ export async function loadCtx(p: TokenPayload, deviceId: string | null): Promise
   const key = `${p.uid}:${p.cid}:${p.sid ?? ''}`;
   const hit = permCache.get(key);
   if (hit && Date.now() - hit.at < 60_000) return { ...hit.ctx, deviceId };
+  // 用户行用管理员连接读：超管进入别家公司时，RLS 下看不到自己的用户行
+  const u = (await adminPool.query(`SELECT u.id, u.name, u.language, u.is_active, u.is_super_admin, u.company_id AS home_company_id, c.plan, c.settings FROM app_user u JOIN company c ON c.id = $2 WHERE u.id = $1`, [p.uid, p.cid])).rows[0];
+  if (!u) throw unauthorized();
+  if (!u.is_active) throw new AppError(401, 'USER_INACTIVE');
+  if (u.home_company_id !== p.cid && !u.is_super_admin) throw unauthorized();
   const ctx = await withCompany({ companyId: p.cid, userId: p.uid }, async (tx) => {
-    const u = (await tx.query(`SELECT u.id, u.name, u.language, u.is_active, u.is_super_admin, c.plan, c.settings FROM app_user u JOIN company c ON c.id = u.company_id WHERE u.id = $1`, [p.uid])).rows[0];
-    if (!u) throw unauthorized();
-    if (!u.is_active) throw new AppError(401, 'USER_INACTIVE');
     const rows = (await tx.query(
       `SELECT r.code, rp.permission_code, rp.condition FROM user_site_role usr JOIN role r ON r.id = usr.role_id
        LEFT JOIN role_permission rp ON rp.role_id = r.id
