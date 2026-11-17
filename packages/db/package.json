@@ -1,0 +1,16 @@
+{
+  "name": "@wh/db",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "migrate": "node scripts/migrate.mjs",
+    "reset": "node scripts/migrate.mjs --reset",
+    "test": "node scripts/migrate.mjs --reset && node scripts/test.mjs",
+    "build": "echo ok",
+    "typecheck": "echo ok"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

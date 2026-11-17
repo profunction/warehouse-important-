@@ -1,0 +1,21 @@
+INSERT INTO permission (code, description, phase) VALUES
+('product.view','查看产品',1),('product.view_cost','查看成本价',1),('product.view_margin','查看毛利率',1),('product.edit','新建修改产品',1),
+('price.edit','修改售价',1),('cost.edit','修改成本价',1),('minlevel.edit','修改最低量补货量',1),('barcode.add','新增条码',1),
+('supplier.manage','管理供应商',1),('customer.manage','管理客户',3),('location.manage','管理站点区位置',1),('label.print','打印位置标签',1),('map.edit','编辑店地图',4),
+('stock.view','查看库存',1),('stock.view_other_sites','查看其他站点库存',1),('movement.view','查看移动记录',1),('movement.view_all','查看所有人移动记录',1),
+('movement.receive','收货',1),('movement.putaway','上架',1),('movement.refill','补货',1),('movement.transfer_out','拣货发运',2),('movement.transfer_in','收调拨',2),
+('movement.sale','销售',3),('movement.return','退货',3),('movement.adjust','手动调整',1),('shelf.assign','登记货架位置',1),
+('order.view','查看订货建议',2),('order.review','预审订货',2),('order.approve','批准订货',2),('po.create','手动开采购单',2),('po.cancel','取消采购单',2),('po.view','查看采购单',2),('po.send','发送采购单',2),
+('receive.variance','处理收货差异',2),('transfer.request','申请调拨',2),('transfer.approve','批准调拨',2),('transfer.pick','拣货',2),('transfer.receive','收调拨',2),('transfer.view','查看调拨',2),
+('count.enter','盘点录入',2),('count.assign','指派盘点',2),('count.approve','审批盘点差异',2),('count.rules','设定盘点规则',2),('count.view_system_qty','看盘点系统量',2),
+('report.sales','销售报表',3),('report.shrinkage','损耗报表',2),('report.stock','库存报表',1),
+('ticket.view_own','看自己的工单',1),('ticket.view_all','看所有工单',1),('ticket.create','开工单',1),('ticket.manage','转派关闭工单',1),
+('import.upload','上传导入',1),('import.approve.product','批准产品导入',1),('import.approve.supplier','批准供应商导入',1),('import.approve.customer','批准客户导入',3),
+('import.approve.location','批准位置导入',1),('import.approve.opening_stock','批准期初库存导入',1),('import.approve.po','批准采购单导入',2),
+('export.product','导出产品',1),('export.product_with_cost','导出产品含成本',1),('export.stock','导出位置库存',1),('export.movement','导出移动记录',1),('export.po','导出采购收货',2),('export.sales','导出销售发票',3),('export.audit','导出审计日志',1),
+('user.manage','管理用户',1),('user.reset_pin','重置 PIN',1),('settings.edit','公司设定',1),('device.manage','管理设备',1),('device.view','查看设备',1),('integration.edit','设定对接',2),('audit.view','查看审计日志',1),
+('approval.decide','审批',1),('delegation.manage','指定代理',2),('kb.edit','编辑知识库',4),('bot.ask','问机器人',4),
+('pos.sell','收银',3),('pos.discount','行折扣',3),('pos.void_open','作废进行中销售',3),('pos.void_closed','作废已完成销售',3),('pos.b2b','企业记账销售',3),('pos.close','日结',3),
+('invoice.manage','客户发票收款',3),('statement.send','发对账单',3),('ap.manage','供应商发票',3),('ap.pay','供应商付款',3),('ap.approve','批准付款',3),('einvoice.manage','电子发票',3),('period.lock','月结锁定',3),
+('company.manage','新建公司开关功能',1),('role.edit','修改角色权限',1)
+ON CONFLICT (code) DO NOTHING;
