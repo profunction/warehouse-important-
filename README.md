@@ -43,6 +43,37 @@ pnpm dev:app
 bash packages/server/scripts/fetch-fonts.sh
 ```
 
+## Windows 上运行
+
+1. 安装 Git、Node 22 LTS、PostgreSQL 16（安装时把 postgres 用户密码设为 `postgres`，端口 5432）。
+2. 打开 PowerShell：
+
+```powershell
+corepack enable; corepack prepare pnpm@10.28.0 --activate
+```
+
+```powershell
+git clone -b claude/pensive-fermat-k3wys1 https://github.com/profunction/warehouse-important-.git
+```
+
+```powershell
+cd warehouse-important-; pnpm install; pnpm approve-builds
+```
+
+`pnpm approve-builds` 时勾选 argon2 和 esbuild。然后一条命令建库、起服务器、建示范数据：
+
+```powershell
+.\e2e\reset-and-seed.ps1
+```
+
+再开一个 PowerShell 窗口：
+
+```powershell
+cd warehouse-important-; pnpm dev:app
+```
+
+浏览器开 http://localhost:5173 。PostgreSQL 密码不是 `postgres` 时先设 `$env:DATABASE_ADMIN_URL = "postgres://postgres:你的密码@localhost:5432/postgres"`。
+
 ## 示范数据
 
 一条命令重置开发库、重启服务器、建示范小店（老板 0120000001 / 111111，库存员 0120000009 / 222222，收银员 0120000008 / 333333，公司代码 DEMO1）：
