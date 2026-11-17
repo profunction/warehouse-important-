@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
 import { Confirm, DoneScreen, ErrorScreen, Page, ProductHead, QtyPad, TopBar } from '../../ui/Shell.js';
@@ -48,21 +49,21 @@ export default function Refill() {
       {step === 'list' && (
         <>
           <div className="section">{t('shelf_low_list')}</div>
-          {low.length === 0 ? <div className="empty"><div className="big">✓</div>{t('none_to_refill')}</div> : (
-            <div className="list" data-testid="low-list">{low.map((it) => <div key={it.product_id + it.shelf_code} className="card" onClick={() => pickItem(it)}><div className="thumb">{it.photo_url ? <img src={it.photo_url} alt="" /> : '📦'}</div><div className="body"><div className="t">{n(it)}</div><div className="s"><span className="label-chip" style={{ background: '#1565C0' }}>{it.shelf_code}</span> {t('shelf_has')} {Number(it.shelf_qty)} · {t('backroom_has')} {Number(it.backroom_qty)}</div></div><div className="status"><span className="dot" style={{ background: Number(it.shelf_qty) <= 0 ? 'var(--red)' : 'var(--yellow)' }} /></div></div>)}</div>
+          {low.length === 0 ? <div className="empty"><div className="big"><Icon name={I.Check} size={48} /></div>{t('none_to_refill')}</div> : (
+            <div className="list" data-testid="low-list">{low.map((it) => <div key={it.product_id + it.shelf_code} className="card" onClick={() => pickItem(it)}><div className="thumb">{it.photo_url ? <img src={it.photo_url} alt="" /> : <Icon name={I.Product} size={32} />}</div><div className="body"><div className="t">{n(it)}</div><div className="s"><span className="label-chip" style={{ background: '#1565C0' }}>{it.shelf_code}</span> {t('shelf_has')} {Number(it.shelf_qty)} · {t('backroom_has')} {Number(it.backroom_qty)}</div></div><div className="status"><span className="dot" style={{ background: Number(it.shelf_qty) <= 0 ? 'var(--red)' : 'var(--yellow)' }} /></div></div>)}</div>
           )}
-          <div className="confirm-wrap"><button className="btn btn-ghost" onClick={() => setStep('shelf')} data-testid="refill-scan">📷 {t('scan_shelf')}</button></div>
-          {count > 0 && <div className="confirm-wrap"><button className="btn btn-primary" onClick={() => setStep('done')}>✓ {t('done')}（{count}）</button></div>}
+          <div className="confirm-wrap"><button className="btn btn-ghost" onClick={() => setStep('shelf')} data-testid="refill-scan"><Icon name={I.Camera} size={24} /> {t('scan_shelf')}</button></div>
+          {count > 0 && <div className="confirm-wrap"><button className="btn btn-primary" onClick={() => setStep('done')}><Icon name={I.Check} size={26} /> {t('done')}（{count}）</button></div>}
         </>
       )}
-      {step === 'shelf' && <Scanner onScan={onScanShelf} instruction={t('scan_shelf')} icon="🗄️" enabled={!err} />}
-      {step === 'product' && shelf && <><div className="instruct"><span className="label-chip" style={{ background: '#1565C0', fontSize: 28 }}>{shelf.code}</span></div><Scanner onScan={onScanProduct} instruction={t('scan_product')} icon="📦" enabled={!err && !askAssign} /></>}
+      {step === 'shelf' && <Scanner onScan={onScanShelf} instruction={t('scan_shelf')} icon={I.Shelf} enabled={!err} />}
+      {step === 'product' && shelf && <><div className="instruct"><span className="label-chip" style={{ background: '#1565C0', fontSize: 28 }}>{shelf.code}</span></div><Scanner onScan={onScanProduct} instruction={t('scan_product')} icon={I.Product} enabled={!err && !askAssign} /></>}
       {step === 'qty' && cur && shelf && (
         <>
           <ProductHead p={cur} sub={`${back[0]?.code ?? '?'} (${t('backroom_has')} ${back[0]?.qty ?? 0}) → ${shelf.code}`} />
           <QtyPad value={qty} onChange={setQty} unit={cur.unit === 'KG' ? t('unit_kg') : t('unit_pcs')} allowDecimal={cur.unit === 'KG'} placeholder={defQty} />
-          {back[0] && Number(qty || defQty) > back[0].qty && <div className="overlay-bar bar-offline">⚠ {t('backroom_has')} {back[0].qty}</div>}
-          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={!(Number(qty || defQty) > 0) || !back[0]} onClick={confirm} data-testid="qty-confirm">✓ {t('confirm')} {qty || defQty}</button></div>
+          {back[0] && Number(qty || defQty) > back[0].qty && <div className="overlay-bar bar-offline"><Icon name={I.Warn} size={20} /> {t('backroom_has')} {back[0].qty}</div>}
+          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={!(Number(qty || defQty) > 0) || !back[0]} onClick={confirm} data-testid="qty-confirm"><Icon name={I.Check} size={26} /> {t('confirm')} {qty || defQty}</button></div>
         </>
       )}
     </Page>

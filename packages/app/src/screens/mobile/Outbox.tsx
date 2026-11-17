@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { Confirm, Page, TopBar } from '../../ui/Shell.js';
 import { db, type OutboxItem } from '../../offline/db.js';
 import { deleteRejected, retryRejected, push, subscribe } from '../../offline/sync.js';
@@ -13,7 +14,7 @@ export default function Outbox() {
     <Page>
       <TopBar title={t('pending_upload')} onBack={() => nav('/m')} />
       {del && <Confirm msg={t('really_delete')} okText={t('delete_record')} danger onOk={async () => { await deleteRejected(del); setDel(null); }} onCancel={() => setDel(null)} />}
-      {items.length === 0 ? <div className="empty"><div className="big">✓</div>{t('synced')}</div> : (
+      {items.length === 0 ? <div className="empty"><div className="big"><Icon name={I.Check} size={48} /></div>{t('synced')}</div> : (
         <div className="list">{items.map((it) => (
           <div key={it.client_id} className="card" style={{ borderColor: it.status === 'rejected' ? 'var(--red)' : 'var(--border)', flexDirection: 'column', alignItems: 'stretch' }}>
             <div className="t">{it.summary ?? it.entity}</div>

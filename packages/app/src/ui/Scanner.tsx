@@ -4,8 +4,10 @@ import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import { useT } from '../i18n/index.js';
 import { fx } from './feedback.js';
+import { Icon, I } from './icons.js';
+import type { LucideIcon } from 'lucide-react';
 
-export function Scanner({ onScan, instruction, icon, last, enabled = true }: { onScan: (code: string) => void; instruction: string; icon: string; last?: string; enabled?: boolean }) {
+export function Scanner({ onScan, instruction, icon, last, enabled = true }: { onScan: (code: string) => void; instruction: string; icon: LucideIcon; last?: string; enabled?: boolean }) {
   const { t } = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hit, setHit] = useState(false);
@@ -60,21 +62,21 @@ export function Scanner({ onScan, instruction, icon, last, enabled = true }: { o
       {!typing && (
         <div className={`scan-wrap ${hit ? 'hit' : ''}`} data-testid="scan-area">
           {camErr ? <div style={{ color: '#fff', padding: 24, textAlign: 'center', fontSize: 20 }}>{t('camera_denied')}</div> : <video ref={videoRef} muted playsInline />}
-          <div className="scan-frame"><i className="c1" /><i className="c2" /></div>
+          <div className="scan-frame"><i className="c1" /><i className="c2" /><i className="laser" /></div>
         </div>
       )}
-      <div className="instruct"><span className="ic">{icon}</span>{instruction}</div>
+      <div className="instruct"><span className="ic"><Icon name={icon} size={36} /></span>{instruction}</div>
       {last && <div className="last">{t('last')}：{last}</div>}
       {typing ? (
         <form className="row2" onSubmit={(e) => { e.preventDefault(); emit(typed); setTyped(''); }}>
           <input autoFocus inputMode="text" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={instruction} data-testid="scan-input" />
           <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>{t('confirm')}</button>
-          <button type="button" className="btn btn-ghost" style={{ width: 'auto' }} onClick={() => setTyping(false)}>✕</button>
+          <button type="button" className="btn btn-ghost" style={{ width: 'auto' }} onClick={() => setTyping(false)}><Icon name={I.Close} size={24} /></button>
         </form>
       ) : (
         <div className="row2">
-          <button className="btn btn-ghost" onClick={() => setTyping(true)} data-testid="type-in">⌨ {t('type_in')}</button>
-          <button className="btn btn-ghost" onClick={toggleTorch}>🔦 {t('torch')}</button>
+          <button className="btn btn-ghost" onClick={() => setTyping(true)} data-testid="type-in"><Icon name={I.Keyboard} size={24} /> {t('type_in')}</button>
+          <button className="btn btn-ghost" onClick={toggleTorch}><Icon name={I.Torch} size={24} /> {t('torch')}</button>
         </div>
       )}
     </div>

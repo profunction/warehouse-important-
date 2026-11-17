@@ -1,7 +1,7 @@
 import { chromium, devices } from 'playwright';
 const browser = await chromium.launch(); const ctx = await browser.newContext({ ...devices['Pixel 5'] }); const page = await ctx.newPage();
 page.on('console', (m) => { if (m.type() === 'error') console.log('CONSOLE', m.text().slice(0, 200)); });
-await page.goto('http://localhost:5173/'); await page.getByText('📱').click();
+await page.goto('http://localhost:5173/'); await page.getByTestId('mode-phone').click();
 await page.getByTestId('company').fill('DEMO1'); await page.getByTestId('phone').fill('0120000009');
 for (const d of '222222') await page.locator(`.keypad [data-key="${d}"]`).click();
 await page.getByTestId('home-grid').waitFor(); await page.waitForTimeout(3000);

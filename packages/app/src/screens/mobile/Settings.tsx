@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Page, TopBar } from '../../ui/Shell.js';
 import { api } from '../../api/client.js';
@@ -27,7 +28,7 @@ export default function Settings() {
       <div className="section">{t('synced')}</div>
       <div className="confirm-wrap"><button className="btn btn-ghost" onClick={() => void pull(true)}>↻ {t('retry')}</button></div>
       {me && <div className="kv"><span className="k">{me.company.name}</span><span>{me.site?.code} · {me.roles.join(',')}</span></div>}
-      {isWeb && <div className="confirm-wrap"><button className="btn btn-secondary" onClick={() => nav('/w/dashboard')}>🖥 网页管理</button></div>}
+      {isWeb && <div className="confirm-wrap"><button className="btn btn-secondary" onClick={() => nav('/w/dashboard')}>网页管理</button></div>}
     </Page>
   );
 }

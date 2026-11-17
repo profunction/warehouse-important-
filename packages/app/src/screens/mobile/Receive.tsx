@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
 import { DoneScreen, ErrorScreen, ExpiryPicker, Page, ProductHead, QtyPad, TopBar } from '../../ui/Shell.js';
@@ -54,8 +55,8 @@ export default function Receive() {
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
       {step === 'scan' && (
         <>
-          <Scanner onScan={onScanProduct} instruction={t('scan_product')} icon="📦" last={lines.length ? `${n(lines[lines.length - 1].product)} ✓ ${lines[lines.length - 1].qty}` : undefined} enabled={!err} />
-          {lines.length > 0 && <div className="confirm-wrap"><button className="btn btn-primary btn-xl" onClick={() => setStep('done')} data-testid="finish">✓ {t('done')}（{lines.length}）</button></div>}
+          <Scanner onScan={onScanProduct} instruction={t('scan_product')} icon={I.Product} last={lines.length ? `${n(lines[lines.length - 1].product)} ✓ ${lines[lines.length - 1].qty}` : undefined} enabled={!err} />
+          {lines.length > 0 && <div className="confirm-wrap"><button className="btn btn-primary btn-xl" onClick={() => setStep('done')} data-testid="finish"><Icon name={I.Check} size={26} /> {t('done')}（{lines.length}）</button></div>}
         </>
       )}
       {step === 'qty' && cur && (
@@ -63,13 +64,13 @@ export default function Receive() {
           <ProductHead p={cur.product} barcode={cur.barcode} sub={`${cur.pack_qty > 1 ? `1 ${t('case')} = ${cur.pack_qty} ${t('unit_pcs')} · ` : ''}${t('put_at')} ${target?.code ?? '?'}`} />
           <QtyPad value={qty} onChange={setQty} unit={cur.pack_qty > 1 ? t('case') : cur.product.unit === 'KG' ? t('unit_kg') : t('unit_pcs')} caseQty={cur.pack_qty > 1 ? 1 : cur.case_qty} allowDecimal={cur.product.unit === 'KG'} auto={cur.weight_kg != null} />
           <div className="row2">
-            <button className="btn btn-ghost" onClick={() => { const d = prompt(t('damaged_qty')); if (d) setDamaged(Number(d) || 0); }}>⚠ {t('damaged')}{damaged ? ` ${damaged}` : ''}</button>
+            <button className="btn btn-ghost" onClick={() => { const d = prompt(t('damaged_qty')); if (d) setDamaged(Number(d) || 0); }}><Icon name={I.Warn} size={22} /> {t('damaged')}{damaged ? ` ${damaged}` : ''}</button>
           </div>
-          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={unitQty <= 0} onClick={afterQty} data-testid="qty-confirm">✓ {t('confirm')} {unitQty} {cur.product.unit === 'KG' ? t('unit_kg') : t('unit_pcs')}</button></div>
+          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={unitQty <= 0} onClick={afterQty} data-testid="qty-confirm"><Icon name={I.Check} size={26} /> {t('confirm')} {unitQty} {cur.product.unit === 'KG' ? t('unit_kg') : t('unit_pcs')}</button></div>
         </>
       )}
       {step === 'expiry' && cur && <><ProductHead p={cur.product} /><ExpiryPicker onPick={(d) => { setExpiry(d); void confirmTarget(d); }} onSkip={() => void confirmTarget(null)} /></>}
-      {step === 'location' && cur && <><ProductHead p={cur.product} sub={`${unitQty} ${t('unit_pcs')}`} /><Scanner onScan={onScanLocation} instruction={t('scan_location')} icon="📍" enabled={!err} /></>}
+      {step === 'location' && cur && <><ProductHead p={cur.product} sub={`${unitQty} ${t('unit_pcs')}`} /><Scanner onScan={onScanLocation} instruction={t('scan_location')} icon={I.MapPin} enabled={!err} /></>}
     </Page>
   );
 }

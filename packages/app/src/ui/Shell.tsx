@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/index.js';
 import { fx } from './feedback.js';
 import { subscribe, type SyncState, isStale } from '../offline/sync.js';
+import { Icon, I } from './icons.js';
 
 export function TopBar({ title, progress, onBack, confirmBack }: { title: string; progress?: string; onBack?: () => void; confirmBack?: boolean }) {
   const { t } = useT(); const nav = useNavigate(); const [ask, setAsk] = useState(false);
@@ -11,7 +12,7 @@ export function TopBar({ title, progress, onBack, confirmBack }: { title: string
   return (
     <>
       <div className="topbar">
-        <button className="btn btn-back" onClick={back} data-testid="back">← {t('back')}</button>
+        <button className="btn btn-back" onClick={back} data-testid="back"><Icon name={I.Back} size={22} /> {t('back')}</button>
         <div className="title">{title}</div>
         {progress && <div className="progress">{progress}</div>}
       </div>
@@ -37,7 +38,7 @@ export function ErrorScreen({ msg, onOk }: { msg: string; onOk: () => void }) {
   return (
     <div className="modal-bg" style={{ background: 'var(--red)', padding: 0 }}>
       <div className="err-screen" style={{ width: '100%' }} data-testid="error-screen">
-        <div className="big">✕</div><div className="msg">{msg}</div>
+        <div className="big"><Icon name={I.Close} size={64} strokeWidth={3} /></div><div className="msg">{msg}</div>
         <button className="btn btn-xl" style={{ background: '#fff', color: 'var(--red)', maxWidth: 360 }} onClick={onOk} autoFocus>{t('ok')}</button>
       </div>
     </div>
@@ -49,7 +50,7 @@ export function DoneScreen({ title, lines, warn, onNext, onHome, nextText }: { t
   useEffect(() => { fx.done(); }, []);
   return (
     <div className="done-screen" data-testid="done-screen">
-      <div className="big">✓</div><div className="msg">{title}</div>
+      <div className="big"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg></div><div className="msg">{title}</div>
       {lines?.map((l, i) => <div key={i}>{l}</div>)}
       {warn && <div className="warn">{warn}</div>}
       <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
@@ -67,8 +68,8 @@ export function SyncBars() {
   if (!s) return null;
   return (
     <>
-      {!s.online && <div className="overlay-bar bar-offline" data-testid="bar-offline">⚠ {t('offline')} · {s.pending} {t('pending_upload')}</div>}
-      {s.online && s.justSynced && <div className="overlay-bar bar-synced">✓ {t('synced')}</div>}
+      {!s.online && <div className="overlay-bar bar-offline" data-testid="bar-offline"><Icon name={I.WifiOff} size={20} /> {t('offline')} · {s.pending} {t('pending_upload')}</div>}
+      {s.online && s.justSynced && <div className="overlay-bar bar-synced"><Icon name={I.Check} size={20} /> {t('synced')}</div>}
       {s.online && isStale() && <div className="overlay-bar bar-stale">⚠ {t('stale_data')}</div>}
       {s.online && s.pending >= 50 && <div className="overlay-bar bar-stale">⚠ {t('please_connect')}</div>}
       {s.rejected > 0 && <div className="overlay-bar bar-alert" onClick={() => nav('/m/outbox')} data-testid="bar-rejected">⚠ {t('needs_attention', { n: s.rejected })} ›</div>}
@@ -125,7 +126,7 @@ export function ProductHead({ p, sub, barcode }: { p: any; sub?: string; barcode
   const { n } = useT();
   return (
     <div className="prod-head">
-      <div className="thumb">{p?.photo_url ? <img src={p.photo_url} alt="" /> : '📦'}</div>
+      <div className="thumb">{p?.photo_url ? <img src={p.photo_url} alt="" /> : <Icon name={I.Product} size={44} strokeWidth={1.75} />}</div>
       <div><div className="n">{n(p)}</div>{barcode && <div className="b">{barcode}</div>}{sub && <div className="k">{sub}</div>}</div>
     </div>
   );

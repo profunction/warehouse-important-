@@ -5,13 +5,13 @@ const shots = new URL('./shots/', import.meta.url).pathname;
 const results = [];
 const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ ...devices['Pixel 5'], permissions: [], locale: 'zh-CN' });
+const ctx = await browser.newContext({ ...devices['Pixel 5'], permissions: [], locale: 'zh-CN', reducedMotion: 'reduce' });
 const page = await ctx.newPage();
 page.on('pageerror', (e) => console.error('PAGEERROR', e.message));
 const wedge = async (code) => { for (const ch of code) await page.keyboard.press(ch); await page.keyboard.press('Enter'); };  // 模拟 HID 扫描枪
 try {
   await page.goto(BASE + '/');
-  await page.getByText('📱').click();
+  await page.getByTestId('mode-phone').click();
   await page.getByTestId('company').fill('DEMO1'); await page.getByTestId('phone').fill('0120000009');
   for (const d of '222222') await page.locator(`.keypad [data-key="${d}"]`).click();
   await page.getByTestId('home-grid').waitFor({ timeout: 15000 });
@@ -104,7 +104,7 @@ try {
   await page.locator('.lang', { hasText: '中' }).click();
   // 退出二次确认
   await page.getByTestId('logout').click(); ok('M20 退出二次确认', await page.getByTestId('confirm-ok').isVisible());
-  await page.getByTestId('confirm-ok').click(); await page.getByText('扫员工卡').waitFor(); ok('退出回登录', true);
+  await page.getByTestId('confirm-ok').click(); await page.getByTestId('mode-scan').waitFor(); ok('退出回登录', true);
 } catch (e) { ok('流程中断', false, String(e).slice(0, 300)); await page.screenshot({ path: shots + 'error.png' }).catch(() => {}); }
 await browser.close();
 for (const [s, n, e] of results) console.log(s.padEnd(5), n, e ? '— ' + e : '');

@@ -5,12 +5,12 @@ import { writeFileSync } from 'node:fs';
 const BASE = process.env.BASE || 'http://localhost:5173';
 const shots = new URL('./shots/', import.meta.url).pathname;
 const results = []; const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
-const browser = await chromium.launch(); const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'zh-CN', acceptDownloads: true }); const page = await ctx.newPage();
+const browser = await chromium.launch(); const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'zh-CN', acceptDownloads: true, reducedMotion: 'reduce' }); const page = await ctx.newPage();
 page.on('pageerror', (e) => console.error('PAGEERROR', e.message)); page.on('dialog', (d) => d.accept());
 const code = 'E2E' + String(Date.now()).slice(-4);
 try {
   // 超管登录（电邮）
-  await page.goto(BASE + '/'); await page.getByText('✉').click(); await page.getByTestId('email').fill('admin@demo.local');
+  await page.goto(BASE + '/'); await page.getByTestId('mode-email').click(); await page.getByTestId('email').fill('admin@demo.local');
   for (const d of '123456') await page.locator(`.keypad [data-key="${d}"]`).click();
   await page.waitForURL(/\/w\/admin\/companies/, { timeout: 15000 }); ok('超管登录进公司列表', true);
   await page.screenshot({ path: shots + 'w01-companies.png' });

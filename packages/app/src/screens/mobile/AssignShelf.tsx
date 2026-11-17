@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
 import { DoneScreen, ErrorScreen, Page, TopBar } from '../../ui/Shell.js';
@@ -17,7 +18,7 @@ export default function AssignShelf() {
     <Page>
       <TopBar title={t('assign_shelf')} onBack={() => (shelf ? setShelf(null) : nav('/m'))} />
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
-      {!shelf ? <Scanner onScan={onShelf} instruction={t('scan_shelf')} icon="🗄️" enabled={!err} /> : <><div className="instruct"><span className="label-chip" style={{ background: '#1565C0', fontSize: 28 }}>{shelf.code}</span></div><Scanner onScan={onProduct} instruction={t('scan_product')} icon="📦" enabled={!err} /></>}
+      {!shelf ? <Scanner onScan={onShelf} instruction={t('scan_shelf')} icon={I.Shelf} enabled={!err} /> : <><div className="instruct"><span className="label-chip" style={{ background: '#1565C0', fontSize: 28 }}>{shelf.code}</span></div><Scanner onScan={onProduct} instruction={t('scan_product')} icon={I.Product} enabled={!err} /></>}
     </Page>
   );
 }

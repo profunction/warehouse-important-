@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
 import { ErrorScreen, Page, ProductHead, TopBar } from '../../ui/Shell.js';
@@ -27,7 +28,7 @@ export default function Lookup() {
     <Page>
       <TopBar title={t('lookup')} onBack={() => (res ? setRes(null) : nav('/m'))} />
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
-      {!res ? <Scanner onScan={onScan} instruction={t('scan_product')} icon="📦" /> : (
+      {!res ? <Scanner onScan={onScan} instruction={t('scan_product')} icon={I.Product} /> : (
         <div data-testid="lookup-result">
           <ProductHead p={res.product} barcode={res.barcode} sub={`${t('price')} RM ${Number(res.product.sell_price).toFixed(2)}${has('product.view_cost') && res.product.cost_price != null ? ` · ${t('cost')} RM ${Number(res.product.cost_price).toFixed(2)}` : ''}`} />
           {offline && <div className="overlay-bar bar-offline">{t('offline_data')}</div>}

@@ -6,6 +6,7 @@ import { ErrorScreen } from '../../ui/Shell.js';
 import { ApiError } from '../../api/client.js';
 import { fx } from '../../ui/feedback.js';
 import type { Lang } from '@wh/shared';
+import { Icon, I } from '../../ui/icons.js';
 
 export default function Login() {
   const { t, lang, setLang } = useT(); const { login } = useAuth();
@@ -26,12 +27,12 @@ export default function Login() {
     <div className="mobile">
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
       <div className="login">
-        <h1>{t('app_name')}</h1>
-        <div className="row2" style={{ padding: 0 }}>
-          {(['scan', 'phone', 'email'] as const).map((m) => <button key={m} className={`btn ${mode === m ? 'btn-primary' : 'btn-ghost'}`} style={{ minHeight: 56, fontSize: 18 }} onClick={() => { setMode(m); setBadge(null); }}>{m === 'scan' ? '🪪 ' + t('scan_badge') : m === 'phone' ? '📱 ' + t('phone') : '✉ ' + t('email')}</button>)}
+        <h1><span className="logo"><Icon name={I.Warehouse} size={30} /></span>{t('app_name')}</h1>
+        <div className="row2 seg" style={{ padding: 0 }}>
+          {(['scan', 'phone', 'email'] as const).map((m) => <button key={m} className={`btn ${mode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { setMode(m); setBadge(null); }} data-testid={`mode-${m}`}>{m === 'scan' ? t('scan_badge') : m === 'phone' ? t('phone') : t('email')}</button>)}
         </div>
-        {mode === 'scan' && !badge && <Scanner onScan={(c) => { if (/^USR:/i.test(c)) setBadge(c); }} instruction={t('scan_badge')} icon="🪪" />}
-        {mode === 'scan' && badge && <div className="card" onClick={() => setBadge(null)}><div className="thumb">🪪</div><div className="body"><div className="t">✓ {t('scan_badge')}</div><div className="s">{badge.split(':')[1]}</div></div></div>}
+        {mode === 'scan' && !badge && <Scanner onScan={(c) => { if (/^USR:/i.test(c)) setBadge(c); }} instruction={t('scan_badge')} icon={I.Badge} />}
+        {mode === 'scan' && badge && <div className="card" onClick={() => setBadge(null)}><div className="thumb"><Icon name={I.Badge} size={32} /></div><div className="body"><div className="t">✓ {t('scan_badge')}</div><div className="s">{badge.split(':')[1]}</div></div></div>}
         {mode === 'phone' && <><input placeholder={t('company_code')} value={company} onChange={(e) => setCompany(e.target.value.toUpperCase())} autoCapitalize="characters" data-testid="company" /><input placeholder={t('phone')} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} data-testid="phone" /></>}
         {mode === 'email' && <input placeholder={t('email')} inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} data-testid="email" />}
         {ready && (

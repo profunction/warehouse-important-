@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
+import { Icon, I } from '../../ui/icons.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
 import { DoneScreen, ErrorScreen, Page, ProductHead, QtyPad, TopBar } from '../../ui/Shell.js';
@@ -45,29 +46,29 @@ export default function Putaway() {
     <Page>
       <TopBar title={t('putaway')} progress={pending.length ? `${pending.length}` : undefined} onBack={() => (step === 'list' ? nav('/m') : setStep('list'))} confirmBack={step !== 'list'} />
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
-      {step === 'list' && (pending.length === 0 ? <div className="empty"><div className="big">✓</div>{t('none_pending')}</div> : (
+      {step === 'list' && (pending.length === 0 ? <div className="empty"><div className="big"><Icon name={I.Check} size={48} /></div>{t('none_pending')}</div> : (
         <>
           <div className="section">{t('pending_putaway')}</div>
-          <div className="list">{pending.map((p) => <div key={p.key} className="card" onClick={() => begin(p)}><div className="thumb">{p.product?.photo_url ? <img src={p.product.photo_url} alt="" /> : '📦'}</div><div className="body"><div className="t">{n(p.product)}</div><div className="s">{p.location?.code} · {p.qty}</div></div></div>)}</div>
-          <div className="confirm-wrap"><button className="btn btn-ghost" onClick={() => setStep('scan')}>📷 {t('scan_product')}</button></div>
+          <div className="list">{pending.map((p) => <div key={p.key} className="card" onClick={() => begin(p)}><div className="thumb">{p.product?.photo_url ? <img src={p.product.photo_url} alt="" /> : <Icon name={I.Product} size={32} />}</div><div className="body"><div className="t">{n(p.product)}</div><div className="s">{p.location?.code} · {p.qty}</div></div></div>)}</div>
+          <div className="confirm-wrap"><button className="btn btn-ghost" onClick={() => setStep('scan')}><Icon name={I.Camera} size={24} /> {t('scan_product')}</button></div>
         </>
       ))}
-      {step === 'scan' && <Scanner onScan={onScanProduct} instruction={t('scan_product')} icon="📦" enabled={!err} />}
+      {step === 'scan' && <Scanner onScan={onScanProduct} instruction={t('scan_product')} icon={I.Product} enabled={!err} />}
       {step === 'loc' && cur && (
         <>
           <ProductHead p={cur} sub={`${qty} ${t('unit_pcs')}`} />
           {suggest && <div className="instruct" style={{ color: suggest.color ?? 'var(--blue)' }}>{t('go_to')} <span className="label-chip" style={{ background: suggest.color ?? 'var(--blue)', fontSize: 32 }}>{suggest.code}</span></div>}
-          <Scanner onScan={onScanLoc} instruction={t('scan_location')} icon="📍" enabled={!err} />
+          <Scanner onScan={onScanLoc} instruction={t('scan_location')} icon={I.MapPin} enabled={!err} />
         </>
       )}
       {step === 'qty' && cur && (
         <>
           <ProductHead p={cur} sub={`${from.code} → ${to.code}`} />
           <QtyPad value={qty} onChange={setQty} unit={cur.unit === 'KG' ? t('unit_kg') : t('unit_pcs')} allowDecimal={cur.unit === 'KG'} placeholder={defQty} />
-          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={!(Number(qty || defQty) > 0)} onClick={confirm} data-testid="qty-confirm">✓ {t('confirm')} {qty || defQty}</button></div>
+          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" disabled={!(Number(qty || defQty) > 0)} onClick={confirm} data-testid="qty-confirm"><Icon name={I.Check} size={26} /> {t('confirm')} {qty || defQty}</button></div>
         </>
       )}
-      {step === 'list' && doneCount > 0 && <div className="confirm-wrap"><button className="btn btn-primary" onClick={() => setStep('done')}>✓ {t('done')}（{doneCount}）</button></div>}
+      {step === 'list' && doneCount > 0 && <div className="confirm-wrap"><button className="btn btn-primary" onClick={() => setStep('done')}><Icon name={I.Check} size={26} /> {t('done')}（{doneCount}）</button></div>}
     </Page>
   );
 }
