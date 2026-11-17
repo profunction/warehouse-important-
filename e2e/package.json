@@ -1,0 +1,1 @@
+{ "name": "@wh/e2e", "private": true, "type": "module", "scripts": { "test": "node mobile-smoke.mjs && node web-smoke.mjs" } }

@@ -119,3 +119,19 @@ CREATE TABLE notification (
   read_at timestamptz
 );
 CREATE INDEX notification_user ON notification (user_id, read_at, sent_at DESC);
+
+-- 负库存自动开工单：同一产品同一位置只开一张未关闭的
+CREATE OR REPLACE FUNCTION trg_negative_stock_ticket() RETURNS trigger AS $$
+DECLARE q numeric; lcode text; pname text; from_virtual boolean; sid uuid;
+BEGIN
+  SELECT is_virtual, site_id, code INTO from_virtual, sid, lcode FROM location WHERE id = NEW.from_location_id;
+  IF from_virtual THEN RETURN NEW; END IF;
+  SELECT qty INTO q FROM stock WHERE product_id = NEW.product_id AND location_id = NEW.from_location_id;
+  IF q >= 0 THEN RETURN NEW; END IF;
+  IF EXISTS (SELECT 1 FROM ticket WHERE company_id = NEW.company_id AND type = 'NEGATIVE_STOCK' AND ref_type = 'stock' AND ref_id = NEW.product_id AND title LIKE '%' || lcode || '%' AND status NOT IN ('RESOLVED','CLOSED')) THEN RETURN NEW; END IF;
+  SELECT coalesce(name_zh, name_en, name_ms) INTO pname FROM product WHERE id = NEW.product_id;
+  INSERT INTO ticket (company_id, site_id, type, title, ref_type, ref_id, owner_role_code, priority, deadline_at)
+  VALUES (NEW.company_id, sid, 'NEGATIVE_STOCK', format('负库存 %s @ %s = %s', pname, lcode, q), 'stock', NEW.product_id, 'WAREHOUSE', 'HIGH', date_trunc('day', now()) + interval '1 day');
+  RETURN NEW;
+END $$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE TRIGGER t_negative_ticket AFTER INSERT ON movement FOR EACH ROW EXECUTE FUNCTION trg_negative_stock_ticket();
