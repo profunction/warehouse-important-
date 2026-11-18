@@ -3,6 +3,8 @@ import type { MeResponse } from '@wh/shared';
 import { api, tokens, APP_VERSION } from '../api/client.js';
 import { clearLocal, start as startSync, pull } from '../offline/sync.js';
 import { kvGet, kvSet } from '../offline/db.js';
+import { themeVars } from '@wh/shared';
+export function applyTheme(theme: any) { const v = themeVars(theme); const r = document.documentElement; for (const [k, val] of Object.entries(v)) r.style.setProperty(k, val); r.dataset.home = (theme?.home ?? 'list'); r.dataset.preset = theme?.preset ?? 'minimal'; }
 
 export interface AuthState { me: MeResponse | null; loading: boolean; offlineUser: { name: string; roles: string[]; home_buttons: any[] } | null }
 type Ctx = AuthState & {
@@ -18,8 +20,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [offlineUser, setOfflineUser] = useState<AuthState['offlineUser']>(null);
   const refreshMe = useCallback(async () => {
     if (!tokens.access) { setMe(null); return; }
-    try { const m = await api<MeResponse>('/me'); setMe(m); await kvSet('me', m); if (!tokens.device && !m.user.is_super_admin) { /* 网页登录不登记设备 */ } }
-    catch (e: any) { if (e?.status === 401) { tokens.access = null; tokens.refresh = null; setMe(null); } else { const cached = await kvGet<MeResponse | null>('me', null); if (cached) setMe(cached); } }
+    try { const m = await api<MeResponse>('/me'); setMe(m); await kvSet('me', m); applyTheme((m.company.settings as any)?.theme); if (!tokens.device && !m.user.is_super_admin) { /* 网页登录不登记设备 */ } }
+    catch (e: any) { if (e?.status === 401) { tokens.access = null; tokens.refresh = null; setMe(null); } else { const cached = await kvGet<MeResponse | null>('me', null); if (cached) { setMe(cached); applyTheme((cached.company.settings as any)?.theme); } } }
   }, []);
   useEffect(() => { (async () => { await refreshMe(); setLoading(false); if (tokens.access) void startSync(); })(); }, [refreshMe]);
   useEffect(() => {

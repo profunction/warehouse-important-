@@ -1,6 +1,7 @@
 // 页面注册表：子代理在此目录添加页面并在下方登记。字段：path, title, group, perm（任一权限可见）, superAdmin, component
 import type { ComponentType } from 'react';
 import Dashboard from './Dashboard.js';
+import ThemeEditor from './ThemeEditor.js';
 import Products from './Products.js';
 import Stock from './Stock.js';
 import Movements from './Movements.js';
@@ -31,6 +32,7 @@ export const pages: PageDef[] = [
   { path: 'users', title: '用户管理', group: '管理', perm: ['user.manage', 'user.reset_pin'], component: Users },
   { path: 'audit', title: '审计日志', group: '管理', perm: ['audit.view'], component: Audit },
   { path: 'settings', title: '公司设定', group: '管理', perm: ['settings.edit'], component: CompanySettings },
+  { path: 'theme', title: '外观设计', group: '管理', perm: ['settings.edit'], component: ThemeEditor },
   { path: 'admin/companies', title: '公司列表', group: '超管', superAdmin: true, component: AdminCompanies },
   { path: 'admin/wizard', title: '开店向导', group: '超管', superAdmin: true, component: AdminWizard },
   { path: 'admin/sync-monitor', title: '同步监控', group: '超管', superAdmin: true, component: AdminSyncMonitor },
