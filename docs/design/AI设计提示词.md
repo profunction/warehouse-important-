@@ -156,3 +156,49 @@ studio lighting, photorealistic mockup --ar 16:9
 3. 想换方向就加一句参考：`Style reference: Shopify POS` / `Square for Retail` / `Linear app` / `Apple Health`。
 4. 要三语显示就加：`Every label shows Chinese on top and a smaller Malay / English line below.`
 5. 挑中的设计把图片或 Figma 链接给我，我按它改代码。
+
+---
+
+# 高端版提示词（方向 D · 深林与黄铜）
+
+把下面这段换掉原来的 0 号风格提示词，其余屏幕提示词照用。
+
+## 0-Premium 风格基础
+
+```
+Design a premium, understated mobile app screen for "WarehouseShop", an inventory app for small supermarkets in Malaysia.
+Think of a luxury banking app or a Japanese stationery brand, not a startup dashboard.
+Palette: warm stone off-white background #F3F1EC, deep forest green #0E3B2B as the only strong color, ink #15201A for text,
+muted grey-green #6F7A74 for secondary text, brass #B8894A used for no more than 2% of the screen (a number, an underline, one badge).
+No gradients, no glassmorphism, no colorful icons, no emoji, no illustrations.
+Typography: headlines and large numbers in a refined serif (Fraunces for Latin, Noto Serif SC for Chinese); all body text and buttons in Inter / Noto Sans SC.
+Small labels uppercase with wide letter spacing. Numbers aligned with tabular figures.
+Layout: generous whitespace, 1px hairline dividers in #E2DED5 instead of boxes, shadows only on one dark tile and on product photos.
+Rules that must not break: buttons at least 72px tall, body text 22px, headline numbers 56px, contrast 7:1, icon + text never color alone,
+Chinese label on top with a small Malay / English line under it. Portrait 390 x 844. Use real product photography (Coca-Cola 325ml, Milo 1kg, Lays 70g).
+```
+
+## 可直接加的参考句
+
+- `Style reference: Apple Wallet, Revolut Metal, Muji, Aesop packaging.`
+- `Reduce until it feels expensive: remove one element, then remove another.`
+- `Use the serif only above 36px; everything smaller stays sans.`
+- `One dark forest-green tile for today's first task, the other tiles white.`
+
+## 高端网页仪表板
+
+```
+Desktop dashboard 1440x900 in the same premium system. Left sidebar deep forest green #0E3B2B, brand name in serif, nav items small uppercase group labels,
+active item marked by a 2px brass left rule, not a filled pill. Main area on warm stone #F3F1EC: serif greeting "早上好，陈老板。", a date in small uppercase on the right.
+A row of four KPIs separated by hairlines, no card boxes: 今日销售 RM 4,820, 库存金额 RM 128,400, 低库存 12, 待处理 5, each with a tiny trend line of text under it.
+Below: a 30-day bar chart in muted grey-green with today's bar in forest green sitting on a hairline baseline, and a list "今天" of four tickets with brass due-date labels.
+Everything aligned to an 8px grid. Nothing decorative.
+```
+
+## 高端扫描屏
+
+```
+SCAN screen in the premium system. Viewfinder is a rounded dark block (#0F1714) with thin mint corner marks and one slow laser line.
+Below, on stone white: a small outlined icon, "请扫产品条码" in 30px sans bold, "Imbas kod bar · Scan barcode" in small uppercase grey-green.
+Two ghost buttons with hairline borders: "打字输入", "手电". Progress "2 / 8" top right in small uppercase. No colors other than forest green, stone, ink and one mint accent inside the viewfinder.
+```
