@@ -80,3 +80,7 @@ ALTER TABLE product_supplier ENABLE ROW LEVEL SECURITY;
 CREATE POLICY rls_ps ON product_supplier USING (EXISTS (SELECT 1 FROM product p WHERE p.id = product_id AND p.company_id = app_company_id()));
 ALTER TABLE product_site_setting ENABLE ROW LEVEL SECURITY;
 CREATE POLICY rls_pss ON product_site_setting USING (EXISTS (SELECT 1 FROM product p WHERE p.id = product_id AND p.company_id = app_company_id()));
+
+-- pg-boss 队列模式归 app_admin，服务器启动时建表
+CREATE SCHEMA IF NOT EXISTS pgboss AUTHORIZATION app_admin;
+GRANT ALL ON SCHEMA pgboss TO app_admin;

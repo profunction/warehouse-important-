@@ -18,6 +18,13 @@ services:
     ports: ["3000:3000"]
   web:
     build: { context: ., dockerfile: Dockerfile, target: web }
-    ports: ["8080:80"]
     depends_on: [server]
-volumes: { dbdata: {}, uploads: {} }
+  # Caddy：自动 HTTPS。设 DOMAIN=shop.example.com 并把域名指到这台机器；没有域名时用 :80
+  caddy:
+    image: caddy:2.8-alpine
+    ports: ["80:80", "443:443"]
+    environment: { DOMAIN: "${DOMAIN:-:80}" }
+    command: sh -c 'printf "%s {\n  encode gzip\n  reverse_proxy web:80\n}\n" "$$DOMAIN" > /etc/caddy/Caddyfile && caddy run --config /etc/caddy/Caddyfile'
+    volumes: [caddy_data:/data, caddy_config:/config]
+    depends_on: [web]
+volumes: { dbdata: {}, uploads: {}, caddy_data: {}, caddy_config: {} }

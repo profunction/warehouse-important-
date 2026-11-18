@@ -118,7 +118,10 @@ export async function syncRoutes(app: FastifyInstance) {
     const { join } = await import('node:path');
     const name = `photo-${req.ctx.companyId.slice(0, 8)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
     await mkdir(config.uploadDir, { recursive: true });
-    await writeFile(join(config.uploadDir, name), await file.toBuffer());
+    // 压到 1280 宽、85% 质量、自动转正，约 200KB 一张
+    const sharp = (await import('sharp')).default;
+    const buf = await sharp(await file.toBuffer()).rotate().resize({ width: 1280, withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
+    await writeFile(join(config.uploadDir, name), buf);
     const { signedFileUrl } = await import('./files.js');
     return { url: signedFileUrl(name) };
   });

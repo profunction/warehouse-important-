@@ -117,7 +117,7 @@ node e2e/mobile-smoke.mjs && node e2e/web-smoke.mjs
 docker compose up --build
 ```
 
-`docker-compose.yml` 起 PostgreSQL、服务器（自动迁移）、前端静态站。首次启动后进容器建超管：
+`docker-compose.yml` 起 PostgreSQL、服务器（自动迁移、定时任务）、前端静态站和 Caddy（设 `DOMAIN=你的域名` 自动申请 HTTPS，不设则走 80 端口）。开放接口文档在 `/api/v1/docs`。开源选型见 `docs/design/开源选型.md`。首次启动后进容器建超管：
 
 ```bash
 docker compose exec server node ../db/scripts/bootstrap-admin.mjs admin@example.com 123456

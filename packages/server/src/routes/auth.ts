@@ -40,7 +40,7 @@ async function sitesFor(userId: string, companyId: string) {
 }
 
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/auth/login', async (req, reply) => {
+  app.post('/auth/login', { config: { rateLimit: process.env.NODE_ENV === 'test' ? false : { max: 20, timeWindow: '1 minute' } } }, async (req, reply) => {
     const body = loginSchema.parse(req.body);
     const u = await findUser(body);
     if (!u) throw new AppError(401, 'USER_NOT_FOUND');
