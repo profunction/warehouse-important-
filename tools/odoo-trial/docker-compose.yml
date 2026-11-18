@@ -1,0 +1,15 @@
+# Odoo Community 18 试用环境：只为验证收银员能不能用它的 POS。
+# 用法：在这个目录执行  docker compose up -d  ，浏览器开 http://localhost:8069 ，建库时勾选 Point of Sale。
+# 试完 docker compose down -v 全部删除。和仓店通主系统无关。
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: odoo, POSTGRES_PASSWORD: odoo, POSTGRES_DB: postgres }
+    volumes: [odoo-db:/var/lib/postgresql/data]
+  odoo:
+    image: odoo:18.0
+    depends_on: [db]
+    ports: ["8069:8069", "8072:8072"]
+    environment: { HOST: db, USER: odoo, PASSWORD: odoo }
+    volumes: [odoo-web:/var/lib/odoo]
+volumes: { odoo-db: {}, odoo-web: {} }
