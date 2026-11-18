@@ -1,0 +1,13 @@
+import { chromium } from 'playwright';
+const BASE = 'http://localhost:5173';
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); const ctx = await b.newContext({ viewport: { width: 1280, height: 860 } }); const p = await ctx.newPage();
+p.on('pageerror', (e) => console.log('PAGEERROR', e.message.slice(0, 200)));
+p.on('console', (m) => { if (m.type() === 'error') console.log('CONSOLE', m.text().slice(0, 200)); });
+await p.goto(BASE + '/'); await p.getByTestId('mode-phone').click(); await p.getByTestId('company').fill('DEMO1'); await p.getByTestId('phone').fill('0120000001');
+for (const d of '111111') await p.locator(`.keypad [data-key="${d}"]`).click();
+await p.getByTestId('home-grid').waitFor({ timeout: 15000 });
+await p.goto(BASE + '/w/warehouse-3d'); await p.getByText('3D 仓库').first().waitFor({ timeout: 15000 });
+await p.waitForTimeout(4000);
+await p.screenshot({ path: 'e2e/shots/w12-warehouse-3d.png' });
+const canvas = p.locator('canvas'); const box = await canvas.boundingBox(); console.log('canvas', box?.width, box?.height);
+await b.close(); console.log('ok');

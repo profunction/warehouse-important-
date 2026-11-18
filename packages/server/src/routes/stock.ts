@@ -61,6 +61,26 @@ export async function stockRoutes(app: FastifyInstance) {
        AND coalesce(st.qty,0) < greatest(coalesce(pss.shelf_min_level, p.min_level / 4), 1)
      ORDER BY coalesce(st.qty,0) / greatest(coalesce(pss.shelf_min_level, p.min_level / 4), 1), p.name_zh`, [req.ctx.siteId])).rows));
 
+  /** 3D 仓库视图数据：每个站点的区、货位（架/层）、每个货位的数量汇总和前三个产品 */
+  app.get('/stock/zone-map', { preHandler: requirePerm('stock.view') }, async (req) => {
+    const q = z.object({ site: z.string().uuid().optional() }).parse(req.query);
+    const site = q.site ?? req.ctx.siteId;
+    return withCompany(cx(req), async (tx) => {
+      const zones = (await tx.query(`SELECT z.id, z.code, z.name_zh, z.name_ms, z.name_en, z.zone_type, z.color, z.capacity_boxes, z.sort_order FROM zone z WHERE z.is_active AND ($1::uuid IS NULL OR z.site_id = $1) ORDER BY z.sort_order, z.code`, [site])).rows;
+      const locs = (await tx.query(`
+        SELECT l.id, l.zone_id, l.code, l.rack, l.level, l.capacity_boxes,
+               coalesce(sum(s.qty) FILTER (WHERE s.qty > 0), 0) AS qty,
+               count(s.product_id) FILTER (WHERE s.qty > 0) AS items,
+               min(s.earliest_expiry) AS earliest_expiry,
+               (SELECT json_agg(json_build_object('name_zh', p.name_zh, 'name_ms', p.name_ms, 'name_en', p.name_en, 'qty', s2.qty) ORDER BY s2.qty DESC) FROM (SELECT * FROM stock s2 WHERE s2.location_id = l.id AND s2.qty > 0 ORDER BY s2.qty DESC LIMIT 3) s2 JOIN product p ON p.id = s2.product_id) AS top
+        FROM location l LEFT JOIN stock s ON s.location_id = l.id
+        WHERE l.is_active AND NOT l.is_virtual AND ($1::uuid IS NULL OR l.site_id = $1)
+        GROUP BY l.id ORDER BY l.zone_id, l.rack, l.level`, [site])).rows;
+      const sites = (await tx.query(`SELECT id, code, name, type FROM site WHERE is_active ORDER BY code`)).rows;
+      return { site, sites, zones, locations: locs };
+    });
+  });
+
   // ---------- 移动 ----------
   app.post('/movements', async (req, reply) => {
     const b = movementSchema.parse(req.body);

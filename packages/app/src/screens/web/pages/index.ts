@@ -2,6 +2,7 @@
 import type { ComponentType } from 'react';
 import Dashboard from './Dashboard.js';
 import ThemeEditor from './ThemeEditor.js';
+import Warehouse3D from './Warehouse3D.js';
 import Products from './Products.js';
 import Stock from './Stock.js';
 import Movements from './Movements.js';
@@ -25,6 +26,7 @@ export const pages: PageDef[] = [
   { path: 'locations', title: '位置和区', group: '主数据', perm: ['location.manage', 'stock.view'], component: Locations },
   { path: 'import', title: 'Excel 导入', group: '主数据', perm: ['import.upload'], component: Import },
   { path: 'stock', title: '库存查询', group: '库存', perm: ['stock.view'], component: Stock },
+  { path: 'warehouse-3d', title: '3D 仓库', group: '库存', perm: ['stock.view'], component: Warehouse3D },
   { path: 'movements', title: '移动记录', group: '库存', perm: ['movement.view', 'movement.view_all'], component: Movements },
   { path: 'reports', title: '报表中心', group: '库存', perm: ['report.stock'], component: Reports },
   { path: 'tickets', title: '工单', group: '运营', perm: ['ticket.view_all'], component: Tickets },
