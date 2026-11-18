@@ -38,6 +38,12 @@ export function tr(lang: Lang, key: string, vars?: Record<string, string | numbe
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, String(v));
   return s;
 }
+/** 第二行：当前语言之外的两种语言，用 · 连接（Muse 设计：中文在上，马来文英文在下） */
+export function tr2(lang: Lang, key: string) {
+  const row = STR[key]; if (!row) return '';
+  const others = (['zh', 'ms', 'en'] as Lang[]).filter((l) => l !== lang).map((l) => row[IDX[l]]).filter((v, i, a) => v && a.indexOf(v) === i && v !== row[IDX[lang]]);
+  return others.join(' · ');
+}
 export function name3(lang: Lang, o: { name_zh?: string | null; name_ms?: string | null; name_en?: string | null } | null | undefined) {
   if (!o) return '';
   const order = lang === 'zh' ? [o.name_zh, o.name_en, o.name_ms] : lang === 'ms' ? [o.name_ms, o.name_en, o.name_zh] : [o.name_en, o.name_ms, o.name_zh];

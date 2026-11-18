@@ -7,12 +7,12 @@ import { subscribe, type SyncState, isStale } from '../offline/sync.js';
 import { Icon, I } from './icons.js';
 
 export function TopBar({ title, progress, onBack, confirmBack }: { title: string; progress?: string; onBack?: () => void; confirmBack?: boolean }) {
-  const { t } = useT(); const nav = useNavigate(); const [ask, setAsk] = useState(false);
+  const { t, t2 } = useT(); const nav = useNavigate(); const [ask, setAsk] = useState(false);
   const back = () => { fx.tap(); if (confirmBack) setAsk(true); else (onBack ?? (() => nav(-1)))(); };
   return (
     <>
       <div className="topbar">
-        <button className="btn btn-back" onClick={back} data-testid="back"><Icon name={I.Back} size={22} /> {t('back')}</button>
+        <button className="btn btn-back" onClick={back} data-testid="back"><Icon name={I.Back} size={20} strokeWidth={1.6} /> {t('back')} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>{t2('back')}</span></button>
         <div className="title">{title}</div>
         {progress && <div className="progress">{progress}</div>}
       </div>
@@ -50,7 +50,7 @@ export function DoneScreen({ title, lines, warn, onNext, onHome, nextText }: { t
   useEffect(() => { fx.done(); }, []);
   return (
     <div className="done-screen" data-testid="done-screen">
-      <div className="big"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg></div><div className="msg">{title}</div>
+      <div className="big"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5l5 5L20 6.5" /></svg></div><div className="msg">{title}</div>
       {lines?.map((l, i) => <div key={i}>{l}</div>)}
       {warn && <div className="warn">{warn}</div>}
       <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
@@ -93,7 +93,7 @@ export function QtyPad({ value, onChange, unit, caseQty, allowDecimal, placehold
   const add = (n: number) => { fx.tap(); onChange(String(Math.round(((Number(value) || 0) + n) * 1000) / 1000)); };
   return (
     <>
-      <div className="qty-display"><div className={`n ${!value ? 'placeholder' : ''} ${auto ? 'auto' : ''}`} data-testid="qty-value">{value || placeholder || '0'}</div><div className="u">{unit}</div></div>
+      <div className="qty-display"><div className={`n num ${!value ? 'placeholder' : ''} ${auto ? 'auto' : ''}`} data-testid="qty-value">{value || placeholder || '0'}</div><div className="u">{unit}</div></div>
       <div className="quick">
         {caseQty && caseQty > 1 && <button className="btn btn-ghost" onClick={() => add(caseQty)} data-testid="plus-case">{t('plus_case')} ({caseQty})</button>}
         <button className="btn btn-ghost" onClick={() => add(1)} data-testid="plus-one">{t('plus_one')}</button>

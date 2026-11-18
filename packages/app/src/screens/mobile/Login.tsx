@@ -27,7 +27,7 @@ export default function Login() {
     <div className="mobile">
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
       <div className="login">
-        <h1><span className="logo"><Icon name={I.Warehouse} size={30} /></span>{t('app_name')}</h1>
+        <h1><span>{t('app_name')}</span><span className="logo"><Icon name={I.Warehouse} size={20} strokeWidth={1.6} /></span></h1>
         <div className="row2 seg" style={{ padding: 0 }}>
           {(['scan', 'phone', 'email'] as const).map((m) => <button key={m} className={`btn ${mode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => { setMode(m); setBadge(null); }} data-testid={`mode-${m}`}>{m === 'scan' ? t('scan_badge') : m === 'phone' ? t('phone') : t('email')}</button>)}
         </div>

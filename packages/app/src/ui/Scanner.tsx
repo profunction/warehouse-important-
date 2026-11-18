@@ -8,7 +8,7 @@ import { Icon, I } from './icons.js';
 import type { LucideIcon } from 'lucide-react';
 
 export function Scanner({ onScan, instruction, icon, last, enabled = true }: { onScan: (code: string) => void; instruction: string; icon: LucideIcon; last?: string; enabled?: boolean }) {
-  const { t } = useT();
+  const { t, t2 } = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [hit, setHit] = useState(false);
   const [camErr, setCamErr] = useState(false);
@@ -65,7 +65,7 @@ export function Scanner({ onScan, instruction, icon, last, enabled = true }: { o
           <div className="scan-frame"><i className="c1" /><i className="c2" /><i className="laser" /></div>
         </div>
       )}
-      <div className="instruct"><span className="ic"><Icon name={icon} size={36} /></span>{instruction}</div>
+      <div className="instruct"><span className="label" style={{ fontSize: 'var(--fs-label)', fontWeight: 600, letterSpacing: '.24em' }}>{t2('scan_product') && (instruction === t('scan_product') ? t2('scan_product') : instruction === t('scan_location') ? t2('scan_location') : instruction === t('scan_shelf') ? t2('scan_shelf') : t2('scan_badge'))}</span><span>{instruction}</span></div>
       {last && <div className="last">{t('last')}：{last}</div>}
       {typing ? (
         <form className="row2" onSubmit={(e) => { e.preventDefault(); emit(typed); setTyped(''); }}>
