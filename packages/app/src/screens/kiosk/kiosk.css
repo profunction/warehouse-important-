@@ -1,0 +1,77 @@
+/* 顾客大屏：竖屏 1080×1920，大字、大按钮、三语同屏。只在 /kiosk 下加载。 */
+.kiosk{position:fixed;inset:0;background:#FAFAFA;color:#1a1a1a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC","Noto Sans",sans-serif;display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;font-size:28px}
+.kiosk *{box-sizing:border-box}
+.kiosk button{font:inherit;cursor:pointer;border:0;border-radius:18px;color:inherit;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kiosk button:active{transform:scale(.98)}
+.kiosk .k-head{display:flex;align-items:center;justify-content:space-between;padding:28px 40px;background:#1B8A3A;color:#fff;min-height:120px}
+.kiosk .k-head .brand{font-size:40px;font-weight:700;letter-spacing:.04em}
+.kiosk .k-head .sub{font-size:22px;opacity:.85}
+.kiosk .k-head .k-back{background:rgba(255,255,255,.18);color:#fff;font-size:30px;padding:16px 28px;min-height:84px;box-shadow:none}
+.kiosk .tri{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.kiosk .tri .zh{font-size:1.15em;font-weight:700}.kiosk .tri .ms,.kiosk .tri .en{font-size:.62em;opacity:.78}
+.kiosk .k-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.kiosk .k-foot{padding:20px 40px;display:flex;gap:20px;align-items:center;justify-content:center;color:#666;font-size:22px}
+.kiosk .k-foot .dot{width:16px;height:16px;border-radius:50%;background:#1B8A3A;display:inline-block}.kiosk .k-foot .dot.off{background:#F9A825}
+/* D1 待机 */
+.kiosk .idle{flex:1;display:flex;flex-direction:column;cursor:pointer}
+.kiosk .promo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:40px;text-align:center;animation:kfade .8s ease}
+.kiosk .promo img,.kiosk .promo .ph{width:620px;height:620px;object-fit:cover;border-radius:40px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;color:#1B8A3A;font-size:120px}
+.kiosk .promo .pt{font-size:56px;font-weight:700}
+.kiosk .promo .price{font-size:84px;font-weight:800;color:#C62828}.kiosk .promo .price s{font-size:40px;color:#888;margin-left:20px;font-weight:400}
+.kiosk .promo-dots{display:flex;gap:14px;justify-content:center;padding-bottom:10px}.kiosk .promo-dots i{width:18px;height:18px;border-radius:50%;background:#ddd}.kiosk .promo-dots i.on{background:#1B8A3A}
+.kiosk .find-btn{margin:0 60px 60px;min-height:220px;background:#1B8A3A;color:#fff;font-size:64px;display:flex;align-items:center;justify-content:center;gap:30px;box-shadow:0 10px 30px rgba(27,138,58,.35);animation:kpulse 2.4s ease-in-out infinite}
+.kiosk .find-btn .tri .ms,.kiosk .find-btn .tri .en{opacity:.9}
+/* D2 找商品 */
+.kiosk .search-box{margin:24px 40px 0;background:#fff;border:3px solid #1B8A3A;border-radius:22px;min-height:110px;display:flex;align-items:center;padding:0 30px;font-size:46px;gap:16px}
+.kiosk .search-box .ph{color:#aaa;font-size:30px}
+.kiosk .search-box .caret{width:4px;height:60px;background:#1B8A3A;animation:kblink 1s steps(2) infinite}
+.kiosk .results{flex:1;min-height:0;overflow:auto;padding:16px 40px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-content:start}
+.kiosk .r-item{display:flex;gap:18px;align-items:center;padding:18px;text-align:left;min-height:140px}
+.kiosk .r-item img,.kiosk .r-item .ph{width:100px;height:100px;border-radius:14px;object-fit:cover;background:#eee;flex:none;display:flex;align-items:center;justify-content:center;color:#999;font-size:40px}
+.kiosk .r-item .n{font-size:30px;font-weight:600;line-height:1.2}.kiosk .r-item .n small{display:block;font-size:20px;color:#777;font-weight:400}
+.kiosk .r-item .p{margin-left:auto;font-size:34px;font-weight:800;color:#C62828;white-space:nowrap}
+.kiosk .cats{display:flex;gap:14px;overflow-x:auto;padding:14px 40px}
+.kiosk .cats button{min-width:200px;min-height:96px;padding:10px 20px;font-size:26px;flex:none;border-left:10px solid var(--c,#9E9E9E)}
+.kiosk .cats button.on{background:#1B8A3A;color:#fff}
+.kiosk .kb{padding:14px 40px 24px;display:grid;gap:10px;background:#EEF2EE}
+.kiosk .kb .row{display:flex;gap:10px;justify-content:center}
+.kiosk .kb button{min-width:88px;min-height:92px;font-size:38px;font-weight:600;flex:1;max-width:120px;border-radius:14px}
+.kiosk .kb button.wide{max-width:none;flex:2.6;font-size:28px}
+.kiosk .kb button.act{background:#E0E0E0}
+.kiosk .hint{text-align:center;color:#777;font-size:24px;padding:10px}
+/* D6 结果 */
+.kiosk .result{flex:1;display:flex;flex-direction:column;min-height:0;padding:20px 40px;gap:18px}
+.kiosk .prod{display:flex;gap:28px;align-items:center;background:#fff;border-radius:24px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.kiosk .prod img,.kiosk .prod .ph{width:220px;height:220px;border-radius:20px;object-fit:cover;background:#eee;display:flex;align-items:center;justify-content:center;color:#999;font-size:80px;flex:none}
+.kiosk .prod .n{font-size:44px;font-weight:700;line-height:1.15}.kiosk .prod .n small{display:block;font-size:26px;color:#777;font-weight:400;margin-top:4px}
+.kiosk .prod .price{font-size:60px;font-weight:800;color:#C62828;margin-top:10px}
+.kiosk .stock{display:inline-flex;align-items:center;gap:12px;font-size:30px;font-weight:700;padding:10px 22px;border-radius:999px;margin-top:10px}
+.kiosk .stock.yes{background:#E8F5E9;color:#1B8A3A}.kiosk .stock.no{background:#FFEBEE;color:#C62828}
+.kiosk .where{font-size:34px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.kiosk .where .loc{background:#C62828;color:#fff;padding:8px 24px;border-radius:14px;font-weight:800;font-size:44px;animation:kblink 1.2s steps(2) infinite}
+.kiosk .map-wrap{flex:1;min-height:0;background:#fff;border-radius:24px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.kiosk .map-wrap svg{max-height:100%;width:auto;max-width:100%}
+.kiosk .legend{display:flex;gap:28px;justify-content:center;font-size:22px;color:#666}
+.kiosk .legend i{display:inline-block;width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:8px}
+.kiosk .actions{display:flex;gap:20px}
+.kiosk .actions button{flex:1;min-height:150px;font-size:40px;font-weight:700}
+.kiosk .actions .call{background:#EF6C00;color:#fff}.kiosk .actions .again{background:#1565C0;color:#fff}
+/* D7 叫员工 */
+.kiosk .help{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;padding:60px;text-align:center}
+.kiosk .help .big{font-size:64px;font-weight:800}
+.kiosk .help .count{font-size:140px;font-weight:800;color:#EF6C00;font-variant-numeric:tabular-nums}
+.kiosk .help .staff{width:260px;height:260px;border-radius:50%;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:120px;color:#1B8A3A;overflow:hidden}
+.kiosk .help .staff img{width:100%;height:100%;object-fit:cover}
+.kiosk .help.ok .big{color:#1B8A3A}
+.kiosk .help button{min-height:150px;min-width:520px;font-size:40px;font-weight:700;background:#1B8A3A;color:#fff}
+.kiosk .thanks{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;font-size:80px;font-weight:800;color:#1B8A3A;text-align:center}
+.kiosk .nokey{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:60px;text-align:center;font-size:36px}
+.kiosk .nokey input{font-size:32px;padding:20px;border:2px solid #ccc;border-radius:14px;width:100%;max-width:800px}
+.kiosk-target{animation:kblink 1s steps(2) infinite}
+.kiosk-route{animation:kdash 1.2s linear infinite}
+@keyframes kblink{50%{opacity:.25}}
+@keyframes kdash{to{stroke-dashoffset:-40}}
+@keyframes kfade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes kpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+@media (prefers-reduced-motion: reduce){.kiosk *{animation:none !important}}
+@media (max-width:700px){.kiosk{font-size:18px}.kiosk .k-head{min-height:70px;padding:12px 16px}.kiosk .k-head .brand{font-size:24px}.kiosk .promo img,.kiosk .promo .ph{width:260px;height:260px}.kiosk .find-btn{min-height:110px;font-size:30px;margin:0 20px 20px}.kiosk .search-box{margin:10px 16px 0;min-height:60px;font-size:24px}.kiosk .results{padding:10px 16px;grid-template-columns:1fr}.kiosk .kb button{min-height:52px;font-size:22px;min-width:40px}.kiosk .result{padding:10px 16px}.kiosk .prod img,.kiosk .prod .ph{width:100px;height:100px}.kiosk .prod .n{font-size:24px}.kiosk .prod .price{font-size:30px}.kiosk .actions button{min-height:80px;font-size:22px}.kiosk .help .count{font-size:70px}.kiosk .help button{min-width:0;min-height:80px;font-size:24px}}

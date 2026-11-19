@@ -99,38 +99,8 @@ export async function adminRoutes(app: FastifyInstance) {
   });
 
   // ---------- 审批 ----------
-  app.get('/approvals/pending', async (req) => withCompany(cx(req), async (tx) => (await tx.query(`SELECT a.*, u.name AS requested_by_name FROM approval_request a JOIN app_user u ON u.id = a.requested_by WHERE a.status = 'PENDING' AND (a.approver_role_code = ANY($1) OR $2) ORDER BY a.created_at`, [req.ctx.roles, req.ctx.isSuperAdmin])).rows));
-  app.get('/approvals', async (req) => withCompany(cx(req), async (tx) => (await tx.query(`SELECT a.*, u.name AS requested_by_name, ap.name AS approver_name FROM approval_request a JOIN app_user u ON u.id = a.requested_by LEFT JOIN app_user ap ON ap.id = a.approver_id ORDER BY a.created_at DESC LIMIT 100`)).rows));
 
-  // ---------- 工单最小版 ----------
-  app.get('/tickets/mine', async (req) => withCompany(cx(req), async (tx) => (await tx.query(`SELECT t.* FROM ticket t WHERE t.status NOT IN ('CLOSED') AND (t.owner_id = $1 OR (t.owner_id IS NULL AND t.owner_role_code = ANY($2))) ORDER BY t.priority DESC, t.deadline_at`, [req.ctx.userId, req.ctx.roles])).rows));
-  app.get('/tickets', { preHandler: requirePerm('ticket.view_all') }, async (req) => {
-    const q = z.object({ status: z.string().optional(), type: z.string().optional() }).parse(req.query);
-    return withCompany(cx(req), async (tx) => (await tx.query(`SELECT t.*, u.name AS owner_name FROM ticket t LEFT JOIN app_user u ON u.id = t.owner_id WHERE ($1::text IS NULL OR t.status = $1) AND ($2::text IS NULL OR t.type = $2) ORDER BY t.created_at DESC LIMIT 200`, [q.status ?? null, q.type ?? null])).rows);
-  });
-  app.post('/tickets', async (req, reply) => {
-    const b = z.object({ type: z.string().default('MANUAL'), title: z.string().min(1), text: z.string().optional(), photo_url: z.string().optional(), ref_type: z.string().optional(), ref_id: z.string().uuid().optional(), priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).default('NORMAL') }).parse(req.body);
-    return withCompany(cx(req), async (tx) => {
-      const t = (await tx.query(`INSERT INTO ticket (company_id, site_id, type, title, ref_type, ref_id, owner_role_code, priority, deadline_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8, now() + interval '2 days') RETURNING *`, [req.ctx.companyId, req.ctx.siteId, b.type, b.title, b.ref_type ?? null, b.ref_id ?? null, req.ctx.plan === 'A' ? 'BOSS' : 'MANAGER', b.priority])).rows[0];
-      await tx.query(`INSERT INTO ticket_event (company_id, ticket_id, user_id, event, text, photo_url) VALUES ($1,$2,$3,'CREATED',$4,$5)`, [req.ctx.companyId, t.id, req.ctx.userId, b.text ?? null, b.photo_url ?? null]);
-      reply.status(201); return t;
-    });
-  });
-  app.get('/tickets/:id', async (req) => {
-    const { id } = req.params as any;
-    return withCompany(cx(req), async (tx) => { const t = (await tx.query(`SELECT * FROM ticket WHERE id = $1`, [id])).rows[0]; if (!t) throw notFound(); const events = (await tx.query(`SELECT e.*, u.name AS user_name FROM ticket_event e LEFT JOIN app_user u ON u.id = e.user_id WHERE e.ticket_id = $1 ORDER BY e.at`, [id])).rows; return { ...t, events }; });
-  });
-  app.post('/tickets/:id/events', async (req) => {
-    const { id } = req.params as any;
-    const b = z.object({ event: z.enum(['COMMENT', 'STATUS', 'ASSIGN', 'PHOTO']), text: z.string().optional(), photo_url: z.string().optional(), status: z.enum(['NEW', 'IN_PROGRESS', 'WAITING', 'RESOLVED', 'CLOSED']).optional(), owner_id: z.string().uuid().optional() }).parse(req.body);
-    return withCompany(cx(req), async (tx) => {
-      if (b.status) await tx.query(`UPDATE ticket SET status = $2, resolved_at = CASE WHEN $2 IN ('RESOLVED','CLOSED') THEN now() END, resolution = COALESCE($3, resolution) WHERE id = $1`, [id, b.status, b.text ?? null]);
-      if (b.owner_id) { if (!hasPerm(req.ctx, 'ticket.manage')) throw new AppError(403, 'FORBIDDEN'); await tx.query(`UPDATE ticket SET owner_id = $2 WHERE id = $1`, [id, b.owner_id]); }
-      if (b.event === 'STATUS' && b.status === 'IN_PROGRESS') await tx.query(`UPDATE ticket SET owner_id = COALESCE(owner_id, $2) WHERE id = $1`, [id, req.ctx.userId]);
-      await tx.query(`INSERT INTO ticket_event (company_id, ticket_id, user_id, event, text, photo_url) VALUES ($1,$2,$3,$4,$5,$6)`, [req.ctx.companyId, id, req.ctx.userId, b.event, b.text ?? b.status ?? null, b.photo_url ?? null]);
-      return { ok: true };
-    });
-  });
+  // 工单接口已搬到 routes/tickets.ts（模块 E）
   /** 隔离记录处理 */
   app.get('/sync/quarantine', { preHandler: requirePerm('ticket.manage') }, async (req) => withCompany(cx(req), async (tx) => (await tx.query(`SELECT q.*, u.name AS user_name, d.name AS device_name FROM sync_quarantine q JOIN app_user u ON u.id = q.user_id JOIN device d ON d.id = q.device_id WHERE q.status = 'PENDING' ORDER BY q.created_at`)).rows));
   app.post('/sync/quarantine/:id/discard', { preHandler: requirePerm('ticket.manage') }, async (req) => {
@@ -154,11 +124,7 @@ export async function adminRoutes(app: FastifyInstance) {
     });
   });
 
-  // ---------- 知识库 / 帮助 ----------
-  app.get('/knowledge', async (req) => {
-    const q = z.object({ screen: z.string().optional() }).parse(req.query);
-    return withCompany(cx(req), async (tx) => (await tx.query(`SELECT * FROM knowledge_article WHERE is_active AND ($1::text IS NULL OR screen_ref = $1 OR screen_ref = left($1, 1)) AND (role_codes = '{}' OR role_codes IS NULL OR role_codes && $2::text[]) ORDER BY company_id NULLS LAST, screen_ref`, [q.screen ?? null, req.ctx.roles])).rows);
-  });
+  // 知识库接口已搬到 routes/bot.ts（模块 E）
 
   // ---------- 公司设定 ----------
   app.get('/company', async (req) => withCompany(cx(req), async (tx) => (await tx.query(`SELECT id, name, short_code, plan, tin, sst_no, msic_code, address, currency, timezone, settings, feature_flags FROM company WHERE id = $1`, [req.ctx.companyId])).rows[0]));

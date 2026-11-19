@@ -4,6 +4,7 @@ import { config } from './config.js';
 import { adminPool } from './db.js';
 import { readdirSync, statSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { registerOrdersJobs } from './ordersJobs.js';
 
 let boss: PgBoss | null = null;
 export async function startJobs() {
@@ -43,6 +44,11 @@ export async function startJobs() {
       SELECT d.company_id, d.site_id, 'DEVICE', format('%s 有 %s 笔记录未上传', d.name, d.pending_count), 'device', d.id, 'MANAGER', 'HIGH', now() + interval '4 hours'
       FROM device d WHERE d.pending_count >= 100 AND NOT EXISTS (SELECT 1 FROM ticket t WHERE t.type = 'DEVICE' AND t.ref_id = d.id AND t.title LIKE '%未上传%' AND t.status NOT IN ('RESOLVED','CLOSED'))`);
   });
+  await (await import('./ticketJobs.js')).registerTicketJobs(boss);
+  await (await import('./einvoiceJobs.js')).registerEinvoiceJobs(boss);
+  await (await import('./posJobs.js')).registerPosJobs(boss);
+  await registerOrdersJobs(boss);
+  await (await import('./countJobs.js')).registerCountJobs(boss);   // 模块 B：循环盘点、日报、工单超期、代理过期
   console.log('jobs started: device-offline-check, cleanup-exports, sync-backlog-check');
   return boss;
 }

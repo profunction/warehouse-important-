@@ -58,6 +58,15 @@ export const ERROR_MESSAGES: Record<string, Tri> = {
   IMPORT_BAD_FILE: { zh: '只接受 .xlsx 文件', ms: 'Hanya fail .xlsx diterima', en: 'Only .xlsx files accepted' },
   IMPORT_WRONG_STATUS: { zh: '这个导入任务的状态不允许此操作', ms: 'Status tugasan import tidak membenarkan', en: 'Import job status does not allow this' },
   LOCATION_HAS_STOCK: { zh: '货位里还有库存，不能删', ms: 'Lokasi masih ada stok', en: 'Location still has stock' },
+  // 模块 D：财务
+  PERIOD_NOT_CLEAR: { zh: '月结检查清单还有未完成项，确认后可强制锁定', ms: 'Senarai semak belum selesai', en: 'Month-end checklist has open items' },
+  PERIOD_NOT_PAST: { zh: '只能锁定已经过去的月份', ms: 'Hanya bulan lepas boleh dikunci', en: 'Only past months can be locked' },
+  INVOICE_STATE: { zh: '发票状态不允许此操作', ms: 'Status invois tidak membenarkan', en: 'Invoice status does not allow this' },
+  PAYMENT_EXCEEDS: { zh: '收款金额超过未付余额', ms: 'Bayaran melebihi baki', en: 'Payment exceeds outstanding balance' },
+  AP_STATE: { zh: '供应商发票状态不允许此操作', ms: 'Status invois pembekal tidak membenarkan', en: 'Supplier invoice status does not allow this' },
+  EINVOICE_STATE: { zh: '电子发票状态不允许此操作', ms: 'Status e-invois tidak membenarkan', en: 'E-invoice status does not allow this' },
+  EINVOICE_CANCEL_WINDOW: { zh: '超过 72 小时，不能取消，请开 Credit Note', ms: 'Melebihi 72 jam, keluarkan Nota Kredit', en: 'Past 72 hours, issue a credit note instead' },
+  EINVOICE_BUYER_REQUIRED: { zh: '电子发票需要买家 TIN 或身份证号', ms: 'E-invois perlu TIN atau no. pengenalan pembeli', en: 'E-invoice needs buyer TIN or ID number' },
   INTERNAL: { zh: '系统出错了，已记录', ms: 'Ralat sistem, telah direkod', en: 'System error, logged' },
 };
 export function msg(code: string, lang: Lang = 'zh'): string {

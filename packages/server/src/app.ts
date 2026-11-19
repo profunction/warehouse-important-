@@ -31,6 +31,7 @@ import { botRoutes } from './routes/bot.js';
 import { mapRoutes } from './routes/map.js';
 import { reportsRoutes } from './routes/reports.js';
 import { periodRoutes } from './routes/period.js';
+import { ticketsRoutes } from './routes/tickets.js';
 
 export function buildApp() {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test', bodyLimit: 20 * 1024 * 1024 });
@@ -80,6 +81,7 @@ export function buildApp() {
     await api.register(mapRoutes);
     await api.register(reportsRoutes);
     await api.register(periodRoutes);
+    await api.register(ticketsRoutes);
   }, { prefix: '/api/v1' });
   return app;
 }

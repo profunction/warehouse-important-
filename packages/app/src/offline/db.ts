@@ -9,16 +9,26 @@ export interface CShelf { id: string; product_id: string; location_id: string; s
 export interface CCategory { id: string; code: string; name_zh?: string; name_ms?: string; name_en?: string; icon: string; color: string; default_backroom_code?: string; is_active: boolean }
 export interface OutboxItem { client_id: string; entity: string; op: 'insert' | 'upsert'; seq: number; payload: any; created_at: string; user_id: string; status: 'pending' | 'sending' | 'rejected'; error?: { code: string; message_zh: string; message_ms: string; message_en: string }; summary?: string }
 export interface KV { key: string; value: any }
+// POS 模块（版本 2）：客户副本（记账销售选客户、离线显示信用额）、本地销售记录（离线未上传 + 最近已上传，供重印/退货查询）
+export interface CCustomer { id: string; code?: string | null; name: string; tin?: string | null; phone?: string | null; email?: string | null; credit_terms_days: number; credit_limit: number; balance: number; is_active: boolean; updated_at?: string }
+export interface PosSale { client_id: string; receipt_no: string; terminal_code: string; session_id?: string | null; sold_at: string; total: number; change_amount: number; status: 'pending' | 'synced' | 'rejected'; payload: any; receipt_text?: string; escpos_base64?: string; server_id?: string; sale_type?: string }
 class WhDb extends Dexie {
   product!: Table<CProduct, string>; barcode!: Table<CBarcode, string>; location!: Table<CLocation, string>; zone!: Table<CZone, string>;
   stock!: Table<CStock, string>; shelf_assignment!: Table<CShelf, string>; category!: Table<CCategory, string>; knowledge_article!: Table<any, string>;
   outbox!: Table<OutboxItem, string>; kv!: Table<KV, string>;
+  customer!: Table<CCustomer, string>; pos_sale!: Table<PosSale, string>;
   constructor() {
     super('wh');
     this.version(1).stores({
       product: 'id, sku, category_id, is_active, plu_code', barcode: 'id, barcode, product_id', location: 'id, code, zone_id, site_id', zone: 'id, site_id, code',
       stock: 'key, product_id, location_id', shelf_assignment: 'id, product_id, location_id, [product_id+is_primary]', category: 'id, code', knowledge_article: 'id, screen_ref',
       outbox: 'client_id, seq, status, user_id', kv: 'key',
+    });
+    this.version(2).stores({
+      product: 'id, sku, category_id, is_active, plu_code', barcode: 'id, barcode, product_id', location: 'id, code, zone_id, site_id', zone: 'id, site_id, code',
+      stock: 'key, product_id, location_id', shelf_assignment: 'id, product_id, location_id, [product_id+is_primary]', category: 'id, code', knowledge_article: 'id, screen_ref',
+      outbox: 'client_id, seq, status, user_id', kv: 'key',
+      customer: 'id, code, name', pos_sale: 'client_id, receipt_no, sold_at, status',
     });
   }
 }
