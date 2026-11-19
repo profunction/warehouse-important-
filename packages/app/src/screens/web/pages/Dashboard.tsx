@@ -46,6 +46,22 @@ export default function Dashboard() {
         <div className="m"><span className="l">安全水位警戒</span><div className="v amber">{d.low_stock ?? 0}<small>款</small>{Number(d.low_stock) > 0 && <span className="pill-soft amber">急需补货</span>}</div><span className="s">{d.expiring_14d > 0 ? `含 ${d.expiring_14d} 批 14 天内到期` : '无临期批次'}</span></div>
         <div className="m"><span className="l">负库存异常 (账实差)</span><div className={`v ${Number(d.negative_stock) > 0 ? 'red' : 'ok'}`}>{d.negative_stock ?? 0}<small>款</small>{Number(d.negative_stock) > 0 ? <span className="pill-soft red">需处理</span> : <span className="pill-soft green">无差异平账</span>}</div><span className={`s ${Number(d.negative_stock) > 0 ? '' : 'ok'}`}>{Number(d.negative_stock) > 0 ? '已自动开工单' : '全通道校验通过'}</span></div>
       </section>
+      <section className="panel todos">
+        {([
+          ['待审批', d.pending_approvals, '/w/approvals', 'approval.decide', '单'],
+          ['待处理导入', d.pending_imports, '/w/import', 'import.upload', '个'],
+          ['未关工单', d.open_tickets, '/w/tickets', 'ticket.view_all', '张'],
+          ['设备离线', d.devices_offline, '/w/devices', 'device.view', '台'],
+          ['未打印标签', d.labels_unprinted, '/w/locations', 'location.manage', '个货位'],
+          ['14 天内到期', d.expiring_14d, '/w/stock', 'stock.view', '批'],
+          ['今日移动', d.movements_today, '/w/movements', 'movement.view', '笔'],
+          ['低库存', d.low_stock, '/w/stock', 'stock.view', '款'],
+        ] as [string, any, string, string, string][]).map(([l, v, to, perm, unit]) => {
+          const warn = Number(v) > 0 && !['今日移动'].includes(l);
+          const inner = <><span className="l">{l}</span><div className={`v ${warn ? 'amber' : ''}`}>{v ?? '—'}<small>{unit}</small></div></>;
+          return has(perm) || (perm === 'movement.view' && canMov) ? <Link key={l} className="todo" to={to}>{inner}</Link> : <div key={l} className="todo">{inner}</div>;
+        })}
+      </section>
       <section className="actions">
         <div className="l">
           <a className="act primary" href="/m"><Icon name={ScanLine} size={20} />扫码 / 快速收货</a>
