@@ -39,7 +39,7 @@ export default function Adjust() {
   const back: Record<string, () => void> = { prod: () => nav('/m'), loc: () => setStep('prod'), qty: () => setStep('loc'), reason: () => setStep('qty'), photo: () => setStep('reason') };
   return (
     <Page>
-      <TopBar title={t('adjust_title')} progress={{ prod: '1/5', loc: '2/5', qty: '3/5', reason: '4/5', photo: '5/5' }[step]} confirmBack={step === 'photo'} onBack={back[step]} />
+      <TopBar title={t('adjust_title')} progress={({ prod: '1/5', loc: '2/5', qty: '3/5', reason: '4/5', photo: '5/5' } as Record<string, string>)[step]} confirmBack={step === 'photo'} onBack={back[step]} />
       {err && <ErrorScreen msg={err} onOk={() => setErr(null)} />}
       {step === 'prod' && <Scanner onScan={onProd} instruction={t('scan_product')} icon={I.Product} enabled={!err} />}
       {step === 'loc' && cur && <><ProductHead p={cur.product} barcode={cur.barcode} /><Scanner onScan={onLoc} instruction={t('scan_location')} icon={I.MapPin} enabled={!err} /></>}

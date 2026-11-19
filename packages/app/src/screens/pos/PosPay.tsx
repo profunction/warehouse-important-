@@ -81,7 +81,7 @@ export default function PosPay() {
           )}
           <Keypad value={amt} onChange={setAmt} />
           <div className="pos-actions">
-            <Btn k="pos_add_payment" color="grey" onClick={() => addPay()} disabled={entered <= 0 || entered >= remaining + (method === 'CASH' ? 0 : 0) && method !== 'CASH' && entered >= remaining} />
+            <Btn k="pos_add_payment" color="grey" onClick={() => addPay()} disabled={!(entered > 0) || (method !== 'CASH' && entered >= remaining)} />
             {pos.customer ? <Btn color="blue" icon={<Building2 size={24} />} onClick={chargeAccount} disabled={busy} testid="pay-credit">{t('pos_charge_account')} <small>{pos.customer.name}</small></Btn> : <span />}
             <Btn color="pay" icon={<CreditCard size={30} />} onClick={confirm} disabled={busy} testid="pay-confirm">{t('pos_confirm_pay')} <small>{t2('pos_confirm_pay')}</small></Btn>
           </div>

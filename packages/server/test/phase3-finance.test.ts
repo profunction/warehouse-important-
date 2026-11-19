@@ -55,7 +55,7 @@ beforeAll(async () => {
   // 库存：收 100 瓶水、50 饼干到收货区
   for (const [pid, qty] of [[P1, 100], [P2, 50]] as const) { const r = await api(app, boss).post('/movements', { product_id: pid, from_location_code: 'SUPPLIER', to_location_id: locId, qty, reason: 'RECEIVE' }); expect(r.statusCode).toBe(201); }
   // PO 10 瓶 @ 5.00 + 10 饼干 @ 3.00；GRN 实收 8 + 10（直接插表，不依赖采购模块接口）
-  const po = await ins(`INSERT INTO purchase_order (company_id, po_no, supplier_id, deliver_to_site_id, status, total_amount, expected_date, created_at) VALUES ($1,'PO-TEST-0001',$2,$3,'SENT',80,(now() AT TIME ZONE 'Asia/Kuala_Lumpur')::date - 2, now() - interval '5 days') RETURNING id`, [companyId, supplierId, siteId]); poId = po.id;
+  const po = await ins(`INSERT INTO purchase_order (company_id, po_no, supplier_id, deliver_to_site_id, status, total_amount, expected_date, created_at) VALUES ($1,'PO-TEST-0001',$2,$3,'SENT',80,(now() AT TIME ZONE 'Asia/Kuala_Lumpur')::date, now() - interval '5 days') RETURNING id`, [companyId, supplierId, siteId]); poId = po.id;
   poLineId = (await ins(`INSERT INTO purchase_order_line (company_id, po_id, line_no, product_id, ordered_qty, unit_cost, received_qty) VALUES ($1,$2,1,$3,10,5,8) RETURNING id`, [companyId, poId, P1])).id;
   poLine2Id = (await ins(`INSERT INTO purchase_order_line (company_id, po_id, line_no, product_id, ordered_qty, unit_cost, received_qty) VALUES ($1,$2,2,$3,10,3,10) RETURNING id`, [companyId, poId, P2])).id;
   const grn = await ins(`INSERT INTO goods_receipt (company_id, grn_no, po_id, site_id, supplier_id, received_by, status, completed_at) VALUES ($1,'GRN-TEST-0001',$2,$3,$4,$5,'COMPLETED', now() - interval '1 day') RETURNING id`, [companyId, poId, siteId, supplierId, bossId]);
