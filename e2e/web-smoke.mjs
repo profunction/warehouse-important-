@@ -69,8 +69,8 @@ try {
   await page.getByRole('button', { name: /导出产品/ }).first().click().catch(() => {}); await page.waitForTimeout(1500);
   await page.screenshot({ path: shots + 'w08-reports.png' });
   await page.goto(BASE + '/w/audit'); await page.locator('table tbody tr').first().waitFor({ timeout: 10000 }); ok('G14 审计页有记录', (await page.locator('table tbody tr').count()) > 0);
-  await page.goto(BASE + '/w/dashboard'); await page.getByText('产品数').waitFor({ timeout: 10000 });
-  const pc = await page.locator('.stat', { hasText: '产品数' }).locator('.v').textContent(); ok('G1 仪表板产品数 40', pc?.trim() === '40', pc ?? '');
+  await page.goto(BASE + '/w/dashboard'); await page.getByText('在库商品种类').waitFor({ timeout: 10000 });
+  const pc = await page.locator('.dash .m', { hasText: '在库商品种类' }).locator('.v').textContent(); ok('G1 仪表板产品数 40', pc?.replace(/[^0-9]/g, '') === '40', pc ?? '');
   await page.screenshot({ path: shots + 'w09-dashboard.png' });
   await page.goto(BASE + '/w/settings'); await page.getByText(/审批门槛|公司设定|基本资料/).first().waitFor({ timeout: 10000 }); ok('公司设定页', true);
   await page.goto(BASE + '/w/admin/sync-monitor'); await page.waitForTimeout(800); ok('A7 同步监控页', await page.getByText(/同步|设备/).first().isVisible());

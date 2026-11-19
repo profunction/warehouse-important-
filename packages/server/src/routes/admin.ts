@@ -17,6 +17,7 @@ export async function adminRoutes(app: FastifyInstance) {
     return {
       stock_value: stockValue,
       product_count: Number((await one(`SELECT count(*) n FROM product WHERE is_active`)).n),
+      total_qty: Number((await one(`SELECT coalesce(sum(s.qty),0) v FROM stock s JOIN location l ON l.id = s.location_id WHERE NOT l.is_virtual AND ($1::uuid IS NULL OR l.site_id = $1)`, [site])).v),
       movements_today: Number((await one(`SELECT count(*) n FROM movement WHERE performed_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Kuala_Lumpur') AT TIME ZONE 'Asia/Kuala_Lumpur'`)).n),
       pending_imports: Number((await one(`SELECT count(*) n FROM import_job WHERE status IN ('VALIDATED','PENDING_APPROVAL')`)).n),
       pending_approvals: Number((await one(`SELECT count(*) n FROM approval_request WHERE status = 'PENDING'`)).n),

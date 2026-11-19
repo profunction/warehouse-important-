@@ -12,7 +12,7 @@ export default function ThemeEditor() {
   const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
   const vars = useMemo(() => themeVars(t), [t]);
   const set = (patch: Partial<Theme>) => setT({ ...t, ...patch });
-  const pick = (preset: Theme['preset']) => setT({ ...t, preset, primary: undefined, accent: undefined, paper: undefined, ink: undefined, ...THEME_PRESETS[preset].defaults });
+  const pick = (preset: Theme['preset']) => setT({ ...t, preset, primary: undefined, accent: undefined, paper: undefined, ink: undefined, nav: undefined, ...THEME_PRESETS[preset].defaults });
   const save = async () => { setBusy(true); try { await api('/company/settings', { method: 'PUT', body: { settings: { theme: t } } }); applyTheme(t); await refreshMe(); setMsg('已保存，全公司手机下次打开生效'); } catch (e: any) { setMsg(e?.text?.('zh') ?? '保存失败'); } finally { setBusy(false); } };
   useEffect(() => { setMsg(''); }, [t]);
   const Phone = () => {
@@ -60,6 +60,7 @@ export default function ThemeEditor() {
             <label>标题和数字字体<select value={t.font} onChange={(e) => set({ font: e.target.value as any })}><option value="serif">衬线（Fraunces 加思源宋体，高端）</option><option value="sans">黑体（Inter 加思源黑体，清晰）</option><option value="round">圆体（Nunito，亲切）</option></select></label>
             <label>圆角<select value={t.radius} onChange={(e) => set({ radius: Number(e.target.value) as any })}><option value={0}>方角（0）</option><option value={12}>小圆角（12）</option><option value={20}>大圆角（20）</option></select></label>
             <label>首页排法<select value={t.home} onChange={(e) => set({ home: e.target.value as any })}><option value="list">编号清单（一行一项）</option><option value="tiles">四格瓷砖（2 × 2）</option></select></label>
+            <label>网页端导航<select value={t.nav ?? THEME_PRESETS[t.preset].defaults.nav ?? 'side'} onChange={(e) => set({ nav: e.target.value as any })}><option value="side">左侧栏（深绿）</option><option value="top">顶部导航（Stitch 稿）</option></select></label>
             <label>按钮高度<select value={t.density} onChange={(e) => set({ density: e.target.value as any })}><option value="normal">标准 72px</option><option value="large">加大 84px</option></select></label>
           </div>
           <div className="toolbar" style={{ marginTop: 20 }}><button className="btn btn-primary" onClick={save} disabled={busy}>保存并应用到全公司</button><button className="btn btn-ghost" onClick={() => pick('minimal')}>恢复默认</button><span className={msg.includes('失败') ? 'err' : 'ok'}>{msg}</span></div>

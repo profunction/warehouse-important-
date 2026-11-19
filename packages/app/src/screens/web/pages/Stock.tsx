@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../../api/client.js';
 import { useT } from '../../../i18n/index.js';
 import { errText, fmtQty, ZONE_TYPE_ZH } from './_util.js';
@@ -8,7 +9,8 @@ export default function Stock() {
   const [tab, setTab] = useState<'product' | 'location' | 'zone'>('product');
   const [msg, setMsg] = useState('');
   // 按产品
-  const [q, setQ] = useState(''); const [cands, setCands] = useState<any[]>([]); const [prod, setProd] = useState<any | null>(null); const [byProd, setByProd] = useState<any[]>([]);
+  const [sp] = useSearchParams();
+  const [q, setQ] = useState(sp.get('q') ?? ''); const [cands, setCands] = useState<any[]>([]); const [prod, setProd] = useState<any | null>(null); const [byProd, setByProd] = useState<any[]>([]);
   useEffect(() => { if (tab !== 'product' || q.length < 1) { setCands([]); return; } const h = setTimeout(() => api(`/products?search=${encodeURIComponent(q)}&limit=20`).then(setCands).catch(() => {}), 250); return () => clearTimeout(h); }, [q, tab]);
   const pick = async (p: any) => { setProd(p); setCands([]); try { setByProd(await api(`/stock/by-product/${p.id}`)); } catch (e) { setMsg(errText(e)); } };
   // 按位置

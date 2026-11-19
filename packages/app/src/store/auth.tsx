@@ -3,8 +3,8 @@ import type { MeResponse } from '@wh/shared';
 import { api, tokens, APP_VERSION } from '../api/client.js';
 import { clearLocal, start as startSync, pull } from '../offline/sync.js';
 import { kvGet, kvSet } from '../offline/db.js';
-import { themeVars } from '@wh/shared';
-export function applyTheme(theme: any) { const v = themeVars(theme); const r = document.documentElement; for (const [k, val] of Object.entries(v)) r.style.setProperty(k, val); r.dataset.home = (theme?.home ?? 'list'); r.dataset.preset = theme?.preset ?? 'minimal'; }
+import { THEME_PRESETS, themeVars } from '@wh/shared';
+export function applyTheme(theme: any) { const v = themeVars(theme); const r = document.documentElement; for (const [k, val] of Object.entries(v)) r.style.setProperty(k, val); r.dataset.home = (theme?.home ?? 'list'); r.dataset.preset = theme?.preset ?? 'minimal'; r.dataset.nav = theme?.nav ?? (THEME_PRESETS[(theme?.preset ?? 'minimal') as keyof typeof THEME_PRESETS]?.defaults.nav ?? 'side'); }
 
 export interface AuthState { me: MeResponse | null; loading: boolean; offlineUser: { name: string; roles: string[]; home_buttons: any[] } | null }
 type Ctx = AuthState & {
