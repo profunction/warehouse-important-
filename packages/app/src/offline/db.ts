@@ -7,7 +7,7 @@ export interface CZone { id: string; site_id: string; code: string; name_zh?: st
 export interface CStock { key: string; product_id: string; location_id: string; qty: number; earliest_expiry?: string }
 export interface CShelf { id: string; product_id: string; location_id: string; site_id: string; is_primary: boolean; is_active: boolean; assigned_at: string }
 export interface CCategory { id: string; code: string; name_zh?: string; name_ms?: string; name_en?: string; icon: string; color: string; default_backroom_code?: string; is_active: boolean }
-export interface OutboxItem { client_id: string; entity: 'movement' | 'shelf_assignment' | 'ticket'; op: 'insert' | 'upsert'; seq: number; payload: any; created_at: string; user_id: string; status: 'pending' | 'sending' | 'rejected'; error?: { code: string; message_zh: string; message_ms: string; message_en: string }; summary?: string }
+export interface OutboxItem { client_id: string; entity: string; op: 'insert' | 'upsert'; seq: number; payload: any; created_at: string; user_id: string; status: 'pending' | 'sending' | 'rejected'; error?: { code: string; message_zh: string; message_ms: string; message_en: string }; summary?: string }
 export interface KV { key: string; value: any }
 class WhDb extends Dexie {
   product!: Table<CProduct, string>; barcode!: Table<CBarcode, string>; location!: Table<CLocation, string>; zone!: Table<CZone, string>;

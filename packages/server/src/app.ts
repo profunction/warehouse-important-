@@ -15,6 +15,22 @@ import { importRoutes } from './routes/imports.js';
 import { exportRoutes } from './routes/exports.js';
 import { adminRoutes } from './routes/admin.js';
 import { fileRoutes } from './routes/files.js';
+import { ordersRoutes } from './routes/orders.js';
+import { receivingRoutes } from './routes/receiving.js';
+import { transfersRoutes } from './routes/transfers.js';
+import { countsRoutes } from './routes/counts.js';
+import { approvalsRoutes } from './routes/approvals.js';
+import { telegramRoutes } from './routes/telegram.js';
+import { posRoutes } from './routes/pos.js';
+import { arRoutes } from './routes/ar.js';
+import { apRoutes } from './routes/ap.js';
+import { einvoiceRoutes } from './routes/einvoice.js';
+import { openRoutes } from './routes/open.js';
+import { kioskRoutes } from './routes/kiosk.js';
+import { botRoutes } from './routes/bot.js';
+import { mapRoutes } from './routes/map.js';
+import { reportsRoutes } from './routes/reports.js';
+import { periodRoutes } from './routes/period.js';
 
 export function buildApp() {
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test', bodyLimit: 20 * 1024 * 1024 });
@@ -48,6 +64,22 @@ export function buildApp() {
     await api.register(exportRoutes);
     await api.register(adminRoutes);
     await api.register(fileRoutes);
+    await api.register(ordersRoutes);
+    await api.register(receivingRoutes);
+    await api.register(transfersRoutes);
+    await api.register(countsRoutes);
+    await api.register(approvalsRoutes);
+    await api.register(telegramRoutes);
+    await api.register(posRoutes);
+    await api.register(arRoutes);
+    await api.register(apRoutes);
+    await api.register(einvoiceRoutes);
+    await api.register(openRoutes);
+    await api.register(kioskRoutes);
+    await api.register(botRoutes);
+    await api.register(mapRoutes);
+    await api.register(reportsRoutes);
+    await api.register(periodRoutes);
   }, { prefix: '/api/v1' });
   return app;
 }

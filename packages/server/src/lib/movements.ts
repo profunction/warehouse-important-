@@ -11,7 +11,7 @@ export const movementSchema = z.object({
   to_location_id: z.string().uuid().optional(), to_location_code: z.string().optional(),
   qty: z.number().positive(),
   reason: z.enum(['RECEIVE', 'PUTAWAY', 'REFILL', 'TRANSFER_OUT', 'TRANSFER_IN', 'SALE', 'RETURN', 'COUNT', 'ADJUST']),
-  ref_type: z.enum(['IMPORT', 'GRN', 'TRANSFER', 'SALE', 'COUNT', 'ADJUST', 'MANUAL']).optional().nullable(),
+  ref_type: z.enum(['IMPORT', 'GRN', 'TRANSFER', 'SALE', 'RETURN', 'COUNT', 'ADJUST', 'MANUAL']).optional().nullable(),
   ref_id: z.string().uuid().optional().nullable(),
   expiry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   performed_at: z.string().datetime({ offset: true }).optional(),

@@ -5,7 +5,7 @@ import { pages } from './pages/index.js';
 import { Icon, I } from '../../ui/icons.js';
 import { LayoutDashboard, CheckCircle2, Package, MapPin, FileSpreadsheet, Boxes, History, BarChart3, Ticket, Smartphone, Users, ScrollText, Settings, Building2, Wand2, Activity, Search, UserRound, LogOut, type LucideIcon } from 'lucide-react';
 const NAV_ICON: Record<string, LucideIcon> = { dashboard: LayoutDashboard, approvals: CheckCircle2, products: Package, locations: MapPin, import: FileSpreadsheet, stock: Boxes, movements: History, reports: BarChart3, tickets: Ticket, devices: Smartphone, users: Users, audit: ScrollText, settings: Settings, 'admin/companies': Building2, 'admin/wizard': Wand2, 'admin/sync-monitor': Activity };
-const GROUP_EN: Record<string, string> = { 总览: 'Overview', 主数据: 'Master data', 库存: 'Stock', 运营: 'Operations', 管理: 'Admin', 超管: 'Super admin' };
+const GROUP_EN: Record<string, string> = { 总览: 'Overview', 主数据: 'Master data', 采购: 'Purchasing', 库存: 'Stock', 销售: 'Sales', 运营: 'Operations', 管理: 'Admin', 超管: 'Super admin' };
 export default function WebApp() {
   const { me, has, logout } = useAuth();
   const loc = useLocation(); const nav = useNavigate();

@@ -1,6 +1,11 @@
 import type { Lang } from '@wh/shared';
+import { STR_ORDERS } from './ext/orders.js';
+import { STR_COUNTS } from './ext/counts.js';
+import { STR_POS } from './ext/pos.js';
+import { STR_KIOSK } from './ext/kiosk.js';
 type S = Record<string, [string, string, string]>; // zh, ms, en
 export const STR: S = {
+  ...STR_ORDERS, ...STR_COUNTS, ...STR_POS, ...STR_KIOSK,
   app_name: ['仓店通', 'WarehouseShop', 'WarehouseShop'],
   login: ['登录', 'Log Masuk', 'Log In'], logout: ['退出', 'Keluar', 'Log Out'], confirm_logout: ['确定退出？', 'Pasti mahu keluar?', 'Log out?'],
   scan_badge: ['扫员工卡', 'Imbas kad pekerja', 'Scan staff badge'], or_phone: ['或输手机号', 'atau nombor telefon', 'or phone number'], company_code: ['公司代码', 'Kod syarikat', 'Company code'], phone: ['手机号', 'Telefon', 'Phone'], email: ['电邮', 'E-mel', 'Email'],

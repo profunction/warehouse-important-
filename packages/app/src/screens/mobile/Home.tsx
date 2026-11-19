@@ -10,8 +10,8 @@ import type { Lang } from '@wh/shared';
 import { Icon, I, SCREEN_ICON } from '../../ui/icons.js';
 import { Package, ChevronRight } from 'lucide-react';
 
-const ROUTE: Record<string, string | null> = { receive: '/m/receive', putaway: '/m/putaway', refill: '/m/refill', lookup: '/m/lookup', assign_shelf: '/m/assign-shelf', tickets: '/m/tickets', settings: '/m/settings', approvals: '/w/approvals', reports: '/w/dashboard', count: null, pick: null, my_records: null, pos: null, returns: null, close_day: null };
-const NEEDS_NET = new Set(['approvals', 'reports']);
+const ROUTE: Record<string, string | null> = { receive: '/m/receive', putaway: '/m/putaway', refill: '/m/refill', lookup: '/m/lookup', assign_shelf: '/m/assign-shelf', tickets: '/m/tickets', settings: '/m/settings', approvals: '/m/approvals', reports: '/m/reports', count: '/m/count', pick: '/m/pick', my_records: '/m/my-records', pos: '/pos', returns: '/pos/returns', close_day: '/pos/close', count_plan: '/m/count-plan', order_proposals: '/m/orders', purchase_orders: '/w/orders', suppliers: '/w/products?tab=suppliers', ar: '/w/ar', ap: '/w/ap', payments: '/w/ar?tab=payments', month_end: '/w/month-end', delegation: '/m/delegation', adjust: '/m/adjust' };
+const NEEDS_NET = new Set(['approvals', 'reports', 'count_plan', 'order_proposals', 'purchase_orders', 'suppliers', 'ar', 'ap', 'payments', 'month_end', 'delegation', 'my_records']);
 const GREET: Record<Lang, [string, string]> = { zh: ['早安', '晚安'], ms: ['Selamat pagi', 'Selamat petang'], en: ['Good morning', 'Good evening'] };
 
 export default function Home() {

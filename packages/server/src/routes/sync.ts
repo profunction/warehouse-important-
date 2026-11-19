@@ -6,6 +6,7 @@ import { AppError } from '../lib/errors.js';
 import { applyMovement, movementSchema, upsertShelf } from '../lib/movements.js';
 import { config } from '../lib/config.js';
 import { ERROR_MESSAGES, REASON_PERMISSION, SYNC_ENTITIES, type SyncPushResult } from '@wh/shared';
+import { getSyncHandler } from '../lib/syncHandlers.js';
 
 /** 游标：base64(JSON {entity: "iso|id"}) */
 const decodeCursor = (c?: string): Record<string, string> => { try { return c ? JSON.parse(Buffer.from(c, 'base64url').toString()) : {}; } catch { return {}; } };
@@ -50,7 +51,7 @@ export async function syncRoutes(app: FastifyInstance) {
   app.post('/sync/push', async (req) => {
     const body = z.object({
       batch_id: z.string().uuid(), device_id: z.string().uuid(), app_version: z.string(), device_time: z.string(), pending_count: z.number().int().optional(),
-      items: z.array(z.object({ client_id: z.string().uuid(), entity: z.enum(['movement', 'shelf_assignment', 'ticket']), op: z.enum(['insert', 'upsert']), seq: z.number().int(), payload: z.record(z.any()) })).max(200),
+      items: z.array(z.object({ client_id: z.string().uuid(), entity: z.string(), op: z.enum(['insert', 'upsert']), seq: z.number().int(), payload: z.record(z.any()) })).max(200),
     }).parse(req.body);
     const ctx = req.ctx;
     if (versionLt(body.app_version, config.minAppVersion)) throw new AppError(426, 'APP_TOO_OLD');
@@ -78,6 +79,9 @@ export async function syncRoutes(app: FastifyInstance) {
             if (!hasPerm(ctx, 'shelf.assign')) throw new AppError(403, 'PERMISSION_DENIED', 'shelf.assign');
             const s = z.object({ product_id: z.string().uuid(), location_id: z.string().uuid(), is_primary: z.boolean().optional(), assigned_at: z.string().optional() }).parse(it.payload);
             sid = (await upsertShelf(tx, ctx, { id: it.client_id, ...s })).id;
+          } else if (it.entity !== 'ticket') {
+            const h = getSyncHandler(it.entity); if (!h) throw new AppError(400, 'VALIDATION', `unknown entity ${it.entity}`);
+            sid = await h(tx, ctx, it.client_id, it.payload, body.device_id);
           } else {
             const t = z.object({ type: z.string(), title: z.string(), ref_type: z.string().optional(), ref_id: z.string().uuid().optional(), text: z.string().optional(), photo_url: z.string().optional(), site_id: z.string().uuid().optional() }).parse(it.payload);
             sid = (await tx.query(`INSERT INTO ticket (id, company_id, site_id, type, title, ref_type, ref_id, owner_role_code, priority, deadline_at) VALUES ($1,$2,$3,$4,$5,$6,$7,'BOSS','NORMAL', now() + interval '2 days') ON CONFLICT (id) DO NOTHING RETURNING id`, [it.client_id, ctx.companyId, t.site_id ?? ctx.siteId, t.type, t.title, t.ref_type ?? null, t.ref_id ?? null])).rows[0]?.id ?? it.client_id;

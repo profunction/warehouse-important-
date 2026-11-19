@@ -32,5 +32,5 @@ export interface SyncPushResult {
   message_zh?: string; message_ms?: string; message_en?: string;
   ticket_id?: string;
 }
-export const SYNC_ENTITIES = ['product', 'barcode', 'category', 'tax_code', 'supplier', 'zone', 'location', 'stock', 'shelf_assignment', 'knowledge_article'] as const;
+export const SYNC_ENTITIES = ['product', 'barcode', 'category', 'tax_code', 'supplier', 'zone', 'location', 'stock', 'shelf_assignment', 'knowledge_article', 'customer'] as const;
 export type SyncEntity = typeof SYNC_ENTITIES[number];
