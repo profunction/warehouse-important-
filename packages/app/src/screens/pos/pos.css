@@ -5,9 +5,9 @@
 .pos-top{height:64px;flex:none;display:flex;align-items:center;gap:14px;white-space:nowrap;overflow:hidden;padding:0 20px;border-bottom:1px solid var(--hair);background:var(--white);font-size:20px}
 .pos-top .brand{font-family:"Noto Serif SC",var(--serif);font-weight:600;font-size:22px;color:var(--green)}
 .pos-top .sp{flex:1}
-.pos-top .dot{display:inline-flex;align-items:center;gap:6px;font-size:18px;color:var(--muted);white-space:nowrap;flex:none}
-.pos-top .dot i{width:12px;height:12px;border-radius:50%;background:var(--grey);display:inline-block}
-.pos-top .dot.on i{background:#2E7D32}.pos-top .dot.off i{background:var(--red)}.pos-top .dot.warn i{background:#F9A825}
+.pos-top .pdot{display:inline-flex;align-items:center;gap:6px;font-size:18px;color:var(--muted);white-space:nowrap;flex:none}
+.pos-top .pdot i{width:12px;height:12px;border-radius:50%;background:var(--grey);display:inline-block}
+.pos-top .pdot.on i{background:#2E7D32}.pos-top .pdot.off i{background:var(--red)}.pos-top .pdot.warn i{background:#F9A825}
 .pos-top .lang{display:flex;gap:2px}.pos-top .lang button{min-width:48px;min-height:44px;border:1px solid var(--hair);background:transparent;font-size:16px;letter-spacing:.1em}.pos-top .lang button.on{background:var(--green);color:#fff;border-color:var(--green)}
 .pos-top .iconbtn{min-height:48px;min-width:48px;border:1px solid var(--hair);background:transparent;display:inline-flex;align-items:center;gap:8px;padding:0 14px;font-size:18px;border-radius:8px}
 .pos-body{flex:1;display:grid;grid-template-columns:60fr 40fr;min-height:0}

@@ -28,6 +28,7 @@ export default function PosOpen() {
       } else if (e instanceof ApiError) setErr(e.text(lang)); else setErr(t('needs_network'));
     } finally { setBusy(false); }
   };
+  if (sessionLoading || session?.status === 'OPEN') return <div className="pos"><PosTop /><div className="pos-center">{t('loading')}</div></div>;
   return (
     <div className="pos">
       <PosTop />

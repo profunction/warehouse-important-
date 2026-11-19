@@ -31,9 +31,9 @@ export function PosTop() {
       <span>{me?.user.name}</span>
       <span style={{ fontVariantNumeric: 'tabular-nums' }}>{now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
       <span className="sp" />
-      {session ? <span className="dot on" title={session.id}><i />{t('pos_open_shift')}</span> : <span className="dot warn"><i />{t('pos_no_shift')}</span>}
-      <span className={`dot ${sync?.online ? (sync.pending ? 'warn' : 'on') : 'off'}`}><i />{sync?.online ? (sync.pending ? t('pos_offline_sales', { n: sync.pending }) : t('online')) : t('offline')}</span>
-      <span className={`dot ${br.connected ? 'on' : 'off'}`}><i />{br.connected ? t('pos_bridge_on') : t('pos_bridge_off')}</span>
+      {session ? <span className="pdot on" title={session.id}><i />{t('pos_open_shift')}</span> : <span className="pdot warn"><i />{t('pos_no_shift')}</span>}
+      <span className={`pdot ${sync?.online ? (sync.pending ? 'warn' : 'on') : 'off'}`}><i />{sync?.online ? (sync.pending ? t('pos_offline_sales', { n: sync.pending }) : t('online')) : t('offline')}</span>
+      <span className={`pdot ${br.connected ? 'on' : 'off'}`}><i />{br.connected ? t('pos_bridge_on') : t('pos_bridge_off')}</span>
       <span className="lang">{(['zh', 'ms', 'en'] as Lang[]).map((l) => <button key={l} className={lang === l ? 'on' : ''} onClick={() => setLang(l)}>{l.toUpperCase()}</button>)}</span>
       <button className="iconbtn" onClick={() => nav('/m')} data-testid="pos-exit"><Icon name={I.LogOut} size={20} /> {t('pos_exit')}</button>
     </div>
