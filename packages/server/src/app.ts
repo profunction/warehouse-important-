@@ -26,7 +26,7 @@ import { arRoutes } from './routes/ar.js';
 import { apRoutes } from './routes/ap.js';
 import { einvoiceRoutes } from './routes/einvoice.js';
 import { openRoutes } from './routes/open.js';
-import { kioskRoutes } from './routes/kiosk.js';
+import { kioskRoutes, kioskKeyGuard } from './routes/kiosk.js';
 import { botRoutes } from './routes/bot.js';
 import { mapRoutes } from './routes/map.js';
 import { reportsRoutes } from './routes/reports.js';
@@ -55,6 +55,7 @@ export function buildApp() {
     if (process.env.NODE_ENV === 'test') console.error('500 @', req.method, req.url, err?.message, err?.stack?.split('\n')[1]);
     return reply.status(500).send(new AppError(500, 'INTERNAL', process.env.NODE_ENV === 'production' ? undefined : String(err?.message)).toJSON());
   });
+  app.addHook('onRequest', kioskKeyGuard);
   app.get('/api/v1/health', async () => ({ ok: true, time: new Date().toISOString() }));
   app.register(async (api) => {
     await api.register(authRoutes);

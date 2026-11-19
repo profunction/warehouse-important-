@@ -58,12 +58,16 @@ export async function applyMovement(tx: Tx, ctx: Pick<RequestCtx, 'companyId' | 
 
 export async function upsertShelf(tx: Tx, ctx: Pick<RequestCtx, 'companyId' | 'userId'>, s: { id?: string; product_id: string; location_id: string; is_primary?: boolean; assigned_at?: string }) {
   try {
+    // 不用 ON CONFLICT：BEFORE 触发器会先把旧主货架改掉，和 ON CONFLICT 同时改同一行会报错
+    const existing = (await tx.query(`SELECT id, is_primary FROM shelf_assignment WHERE product_id = $1 AND location_id = $2`, [s.product_id, s.location_id])).rows[0];
+    if (existing) {
+      await tx.query(`UPDATE shelf_assignment SET is_primary = ($2::boolean OR is_primary), is_active = true, assigned_at = greatest(assigned_at, COALESCE($3::timestamptz, now())), assigned_by = $4 WHERE id = $1`, [existing.id, s.is_primary ?? true, s.assigned_at ?? null, ctx.userId]);
+      return { id: existing.id, inserted: false };
+    }
     const r = await tx.query(
       `INSERT INTO shelf_assignment (id, company_id, product_id, location_id, site_id, is_primary, assigned_by, assigned_at)
-       VALUES (COALESCE($1::uuid, uuid_v7()), $2, $3, $4, (SELECT site_id FROM location WHERE id = $4), COALESCE($5, true), $6, COALESCE($7::timestamptz, now()))
-       ON CONFLICT (product_id, location_id) DO UPDATE SET is_primary = EXCLUDED.is_primary OR shelf_assignment.is_primary, is_active = true,
-         assigned_at = greatest(shelf_assignment.assigned_at, EXCLUDED.assigned_at), assigned_by = EXCLUDED.assigned_by
-       RETURNING id, (xmax = 0) AS inserted`, [s.id ?? null, ctx.companyId, s.product_id, s.location_id, s.is_primary ?? null, ctx.userId, s.assigned_at ?? null]);
-    return r.rows[0];
+       VALUES (COALESCE($1::uuid, uuid_v7()), $2, $3, $4, (SELECT site_id FROM location WHERE id = $4), COALESCE($5, true), $6, COALESCE($7::timestamptz, now())) RETURNING id`,
+      [s.id ?? null, ctx.companyId, s.product_id, s.location_id, s.is_primary ?? null, ctx.userId, s.assigned_at ?? null]);
+    return { id: r.rows[0].id, inserted: true };
   } catch (e) { throw fromDbError(e); }
 }

@@ -27,6 +27,9 @@ try {
   await page.getByTestId('back').click(); await page.getByTestId('back').click();
   // 收货
   await page.getByTestId('tile-receive').click();
+  // 第二阶段起收货先列待收 PO；示范公司有 PO 时点无单收货
+  await Promise.race([page.getByTestId('scan-area').waitFor({ timeout: 15000 }), page.getByTestId('receive-no-po').waitFor({ timeout: 15000 })]);
+  if (await page.getByTestId('receive-no-po').isVisible()) await page.getByTestId('receive-no-po').click();
   await page.getByTestId('scan-area').waitFor();
   await page.screenshot({ path: shots + '02-receive-scan.png' });
   await wedge('9556001234567');

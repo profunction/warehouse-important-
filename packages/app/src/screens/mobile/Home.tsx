@@ -8,7 +8,8 @@ import { api, isOnline } from '../../api/client.js';
 import { subscribe } from '../../offline/sync.js';
 import type { Lang } from '@wh/shared';
 import { Icon, I, SCREEN_ICON } from '../../ui/icons.js';
-import { Package, ChevronRight } from 'lucide-react';
+import { Package, ChevronRight, UserCheck } from 'lucide-react';
+import { useCustomerCallWatcher } from './Tickets.js';
 
 const ROUTE: Record<string, string | null> = { receive: '/m/receive', putaway: '/m/putaway', refill: '/m/refill', lookup: '/m/lookup', assign_shelf: '/m/assign-shelf', tickets: '/m/tickets', settings: '/m/settings', approvals: '/m/approvals', reports: '/m/reports', count: '/m/count', pick: '/m/pick', my_records: '/m/my-records', pos: '/pos', returns: '/pos/returns', close_day: '/pos/close', count_plan: '/m/count-plan', order_proposals: '/m/orders', purchase_orders: '/w/orders', suppliers: '/w/products?tab=suppliers', ar: '/w/ar', ap: '/w/ap', payments: '/w/ar?tab=payments', month_end: '/w/month-end', delegation: '/m/delegation', adjust: '/m/adjust' };
 const NEEDS_NET = new Set(['approvals', 'reports', 'count_plan', 'order_proposals', 'purchase_orders', 'suppliers', 'ar', 'ap', 'payments', 'month_end', 'delegation', 'my_records']);
@@ -16,9 +17,10 @@ const GREET: Record<Lang, [string, string]> = { zh: ['早安', '晚安'], ms: ['
 
 export default function Home() {
   const { me, logout, isWeb } = useAuth(); const { t, t2, lang, setLang } = useT(); const nav = useNavigate();
-  const [ask, setAsk] = useState(false); const [badges, setBadges] = useState<Record<string, number>>({}); const [online, setOnline] = useState(isOnline());
+  const [ask, setAsk] = useState(false); const [badges, setBadges] = useState<Record<string, number>>({}); const [online, setOnline] = useState(isOnline()); const [dels, setDels] = useState<any[]>([]);
+  useCustomerCallWatcher();
   useEffect(() => subscribe((s) => setOnline(s.online)), []);
-  useEffect(() => { (async () => { try { const [low, tk] = await Promise.all([api('/stock/shelf-low'), api('/tickets/mine')]); setBadges({ refill: low.length, tickets: tk.length }); } catch { /* 离线用缓存 */ } })(); }, []);
+  useEffect(() => { (async () => { try { const [low, tk, ap] = await Promise.all([api('/stock/shelf-low'), api('/tickets/mine'), api('/approvals/pending').catch(() => [])]); setBadges({ refill: low.length, tickets: tk.length, approvals: ap.length }); } catch { /* 离线用缓存 */ } try { setDels(await api('/me/delegations')); } catch { /* */ } })(); }, []);
   if (!me) return null;
   const buttons = me.home_buttons.length ? me.home_buttons : [{ screen: 'lookup', icon: 'search', color: '#616161' }];
   const go = (b: any) => { fx.tap(); const r = ROUTE[b.screen]; if (r) nav(r); };
@@ -35,6 +37,7 @@ export default function Home() {
       <div className="hero">
         <div><div className="label">{dateLine}</div><div className="name" style={{ marginTop: 8 }}>{GREET[lang][hour < 14 ? 0 : 1]}，{me.user.name}</div><div className="role">{roleLine}</div></div>
       </div>
+      {dels.length > 0 && <div className="deleg-hint" style={{ margin: '10px var(--pad) 0', padding: '10px 14px', border: '1px solid var(--brass)', display: 'flex', gap: 10, alignItems: 'center', fontSize: 'var(--fs-small)' }}><UserCheck size={22} strokeWidth={1.6} /><span>{lang === 'zh' ? `你是 ${dels[0].delegator_name} 的代理，到 ${new Date(dels[0].ends_at).toLocaleDateString('zh-CN')}` : lang === 'ms' ? `Anda wakil ${dels[0].delegator_name} hingga ${new Date(dels[0].ends_at).toLocaleDateString('ms-MY')}` : `You are ${dels[0].delegator_name}'s delegate until ${new Date(dels[0].ends_at).toLocaleDateString('en-MY')}`}</span></div>}
       <div className="brass-rule" />
       <div className="home-grid stagger" data-testid="home-grid">
         {buttons.map((b, i) => {

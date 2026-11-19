@@ -64,6 +64,10 @@ try {
   await m.goto(BASE + '/m/tickets'); await m.waitForTimeout(1500); await m.screenshot({ path: shots + 'k6-mobile-tickets.png' });
   await mctx.close();
 } catch (e) { console.error('E2E ERROR', e); process.exitCode = 1; }
-finally { await browser.close(); }
+finally {
+  // cleanup-help：关掉本次产生的顾客呼叫工单，免得下次手机登录直接弹呼叫屏
+  try { const boss2 = (await j('/auth/login', { company_code: 'DEMO1', phone: '0120000001', pin: '111111' })).access_token; const list = await j('/tickets?type=CUSTOMER_HELP', null, boss2); for (const t of list.filter((x) => x.status === 'NEW')) await j(`/tickets/${t.id}/close`, { reason_code: 'HANDLED_OTHER', text: 'e2e cleanup' }, boss2); } catch { /* */ }
+  await browser.close();
+}
 for (const [s, n, e] of results) console.log(s, n, e);
 console.log(results.filter((r) => r[0] === 'PASS').length + '/' + results.length + ' passed');

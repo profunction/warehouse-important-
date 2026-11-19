@@ -12,8 +12,9 @@ await su.connect();
 const q = (sql, p) => su.query(sql, p);
 
 // 建两家公司
-const c1 = (await q(`SELECT * FROM create_company_from_template('测试店一','DT001','A','C1','W1',null,'老板一','0120000001','h1',null)`)).rows[0];
-const c2 = (await q(`SELECT * FROM create_company_from_template('测试店二','DT002','A',null,null,null,'老板二','0120000002','h2',null)`)).rows[0];
+const SUF = String(Date.now()).slice(-5);
+const c1 = (await q(`SELECT * FROM create_company_from_template('测试店一','DT1'||$1,'A','C1','W1',null,'老板一','0120000001','h1',null)`, [SUF])).rows[0];
+const c2 = (await q(`SELECT * FROM create_company_from_template('测试店二','DT2'||$1,'A',null,null,null,'老板二','0120000002','h2',null)`, [SUF])).rows[0];
 const C1 = c1.o_company_id, U1 = c1.o_boss_user_id, C2 = c2.o_company_id;
 await q(`SET app.company_id = '${C1}'`); await q(`SET app.user_id = '${U1}'`);
 const loc = async (code, cid = C1) => (await q(`SELECT id FROM location WHERE company_id=$1 AND code=$2`, [cid, code])).rows[0].id;
@@ -115,7 +116,7 @@ await q(`INSERT INTO movement (id, company_id, product_id, from_location_id, to_
 ok('到期批写入 earliest_expiry', (await q(`SELECT earliest_expiry::text e FROM stock WHERE product_id=$1 AND location_id=$2`, [P2, await loc('S-04')])).rows[0].e === '2027-01-31');
 // 审批自批
 await expectError('B 模式审批者不能批自己', async () => {
-  const cb = (await q(`SELECT * FROM create_company_from_template('B公司','DTB01','B',null,null,null,'老板B','0120000003','h',null)`)).rows[0];
+  const cb = (await q(`SELECT * FROM create_company_from_template('B公司','DTB'||$1,'B',null,null,null,'老板B','0120000003','h',null)`, [SUF])).rows[0];
   await q(`INSERT INTO approval_request (company_id, type, ref_type, ref_id, requested_by, approver_role_code, approver_id, status) VALUES ($1,'IMPORT','import_job',uuid_v7(),$2,'BOSS',$2,'APPROVED')`, [cb.o_company_id, cb.o_boss_user_id]);
 }, '不能批准自己');
 

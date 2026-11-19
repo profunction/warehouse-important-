@@ -1,16 +1,17 @@
 # 仓店通 WarehouseShop
 
-零售店和超市的一体化系统：仓库、店面、库存账本、Excel 导入导出、角色权限、离线手机端。设计文档在 `docs/design/`，第一阶段详细规格在 `docs/design/phase1/`。
+零售店和超市的一体化系统：仓库、店面、库存账本、盘点、订货与 Telegram 审批、调拨、自有 POS、客户与供应商发票、MyInvois 电子发票、月结、报表、顾客大屏、AI 机器人、工单、Excel 导入导出、角色权限与代理、离线手机端。设计文档在 `docs/design/`，第一阶段规格在 `docs/design/phase1/`，全功能验收记录在 `docs/design/phase4/00-全功能验收记录.md`。
 
 ## 目录
 
 | 目录 | 内容 |
 |---|---|
-| `packages/db` | PostgreSQL 迁移（29 张表、触发器、RLS、账号）、种子（权限、角色、A 模式模板、SOP）、数据库验收测试 |
-| `packages/server` | Fastify API（认证、主数据、库存账本、同步、Excel、管理、超管），vitest 集成测试 |
-| `packages/app` | React PWA：手机端（四个屏幕模板、三语、离线）和网页管理端、超管端 |
+| `packages/db` | PostgreSQL 迁移（约 70 张表、触发器、RLS、账号、月结锁、大屏推送）、种子（权限、角色、A 模式模板、SOP、机器人查询）、数据库验收测试 |
+| `packages/server` | Fastify API（认证、主数据、库存账本、同步、Excel、采购收货调拨、盘点审批代理、Telegram、POS、开放接口、应收应付、电子发票、月结、报表、大屏、机器人、地图、工单），约 240 个接口，vitest 集成测试 195 项 |
+| `packages/app` | React PWA：手机端 `/m`（三语、离线）、平板 POS `/pos`、顾客大屏 `/kiosk?key=…`、网页管理端 `/w`、超管端 |
 | `packages/shared` | 权限代码、三语错误信息、类型 |
-| `e2e` | Playwright 端到端冒烟：手机端 20 项、网页端 18 项 |
+| `e2e` | Playwright 端到端冒烟：手机、网页、采购收货、盘点审批、POS、财务、大屏机器人 七套 |
+| `tools/wh-bridge` | 收银机本地硬件桥接（WebSocket 9123：打印、钱箱、秤），`node index.mjs --simulate` 模拟 |
 | `docs/design` | 八部分设计和第一阶段规格、验收清单、验收记录 |
 
 ## 本地运行
@@ -93,10 +94,10 @@ pnpm --filter @wh/server test
 ```
 
 ```bash
-node e2e/mobile-smoke.mjs && node e2e/web-smoke.mjs
+for f in mobile-smoke web-smoke orders-smoke counts-smoke pos-smoke finance-smoke kiosk-smoke; do node e2e/$f.mjs; done
 ```
 
-端到端测试需要开发服务器和 Vite 都在跑，且用示范数据。
+端到端测试需要开发服务器和 Vite 都在跑（`bash e2e/up.sh`），且用示范数据。服务器测试每个文件可单独用自己的库跑：`DATABASE_NAME=warehouse_test_x pnpm --filter @wh/server exec vitest run test/phase3-pos.test.ts`。
 
 ## 环境变量（服务器）
 
@@ -110,6 +111,10 @@ node e2e/mobile-smoke.mjs && node e2e/web-smoke.mjs
 | FILE_TOKEN_SECRET | dev-file-secret | 导出文件签名 |
 | UPLOAD_DIR | packages/server/uploads | 导入导出文件 |
 | LABEL_FONT | 自动查找 | 标签 PDF 中文字体路径 |
+| TELEGRAM_BOT_TOKEN / TELEGRAM_WEBHOOK_SECRET / PUBLIC_URL | 空 | Telegram 审批按钮和日报；也可在网页"公司设定 → Telegram"按公司填。未配置时消息写入"通知"页 |
+| MYINVOIS_ENV | STUB | STUB 本地模拟 / SANDBOX 预生产 / PRODUCTION；凭据在网页"电子发票 → 设定"填 |
+| ANTHROPIC_API_KEY | 空 | 机器人意图分类用 Claude；不填用规则 |
+| JOBS_DISABLED | 0 | 设 1 关闭定时任务（订货建议、循环盘点、日报、电子发票重试、Pandal 拉取、工单提醒） |
 
 ## Docker
 

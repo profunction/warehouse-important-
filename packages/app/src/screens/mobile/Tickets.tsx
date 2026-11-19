@@ -22,7 +22,7 @@ export function useCustomerCallWatcher(intervalMs = 10000) {
       if (busy.current || !isOnline() || location.pathname.startsWith('/m/customer-call') || location.pathname.startsWith('/kiosk')) return;
       busy.current = true;
       try {
-        const list: any[] = await api('/tickets/mine?type=CUSTOMER_HELP'); const open = list.filter((t) => t.status === 'NEW'); setPending(open);
+        const list: any[] = await api('/tickets/mine?type=CUSTOMER_HELP'); const open = list.filter((t) => t.status === 'NEW' && Date.now() - new Date(t.created_at).getTime() < 15 * 60_000); setPending(open);   // 15 分钟前的旧呼叫不再弹（已由任务升级给经理）
         const s = seen(); const fresh = open.find((t) => !s[t.id]);
         if (fresh) { markCallSeen(fresh.id); fx.alert(); nav(`/m/customer-call?id=${fresh.id}`); }
       } catch { /* */ } finally { busy.current = false; }

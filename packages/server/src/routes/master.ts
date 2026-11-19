@@ -144,7 +144,8 @@ export async function masterRoutes(app: FastifyInstance) {
     return withCompany(cx(req), async (tx) => {
       const s = (await tx.query(`INSERT INTO site (company_id, code, name, type, address) VALUES ($1,$2,$3,$4,$5) RETURNING *`, [req.ctx.companyId, b.code, b.name, b.type, b.address ?? null])).rows[0];
       const z1 = (await tx.query(`INSERT INTO zone (company_id, site_id, code, name_zh, name_ms, name_en, zone_type, color) VALUES ($1,$2,'RCV','收货区','Zon Terima','Receiving','RECEIVING','#9E9E9E') RETURNING id`, [req.ctx.companyId, s.id])).rows[0];
-      await tx.query(`INSERT INTO location (company_id, site_id, zone_id, code, rack, level) VALUES ($1,$2,$3,'RCV-01-1',1,1)`, [req.ctx.companyId, s.id, z1.id]);
+      const n = Number((await tx.query(`SELECT count(*) n FROM location WHERE company_id = $1 AND code LIKE 'RCV-%'`, [req.ctx.companyId])).rows[0].n) + 1;
+      await tx.query(`INSERT INTO location (company_id, site_id, zone_id, code, rack, level) VALUES ($1,$2,$3,$4,$5,1)`, [req.ctx.companyId, s.id, z1.id, `RCV-${String(n).padStart(2, '0')}-1`, n]);
       reply.status(201); return s;
     });
   });
