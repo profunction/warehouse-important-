@@ -2,10 +2,10 @@
 .pos{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--paper);color:var(--ink);font-size:22px;overflow:hidden;--pos-blue:#1565C0;--pos-orange:#B85C00;--pos-red:var(--red);--pos-green:var(--green);--pos-grey:#4a5550}
 .pos *{box-sizing:border-box}
 .pos button{font:inherit;cursor:pointer}
-.pos-top{height:64px;flex:none;display:flex;align-items:center;gap:18px;padding:0 20px;border-bottom:1px solid var(--hair);background:var(--white);font-size:20px}
+.pos-top{height:64px;flex:none;display:flex;align-items:center;gap:14px;white-space:nowrap;overflow:hidden;padding:0 20px;border-bottom:1px solid var(--hair);background:var(--white);font-size:20px}
 .pos-top .brand{font-family:"Noto Serif SC",var(--serif);font-weight:600;font-size:22px;color:var(--green)}
 .pos-top .sp{flex:1}
-.pos-top .dot{display:inline-flex;align-items:center;gap:6px;font-size:18px;color:var(--muted)}
+.pos-top .dot{display:inline-flex;align-items:center;gap:6px;font-size:18px;color:var(--muted);white-space:nowrap;flex:none}
 .pos-top .dot i{width:12px;height:12px;border-radius:50%;background:var(--grey);display:inline-block}
 .pos-top .dot.on i{background:#2E7D32}.pos-top .dot.off i{background:var(--red)}.pos-top .dot.warn i{background:#F9A825}
 .pos-top .lang{display:flex;gap:2px}.pos-top .lang button{min-width:48px;min-height:44px;border:1px solid var(--hair);background:transparent;font-size:16px;letter-spacing:.1em}.pos-top .lang button.on{background:var(--green);color:#fff;border-color:var(--green)}
@@ -26,19 +26,19 @@
 .pos-line .amt{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;font-family:var(--serif)}
 .pos-line .disc{color:var(--pos-orange);font-size:16px}
 .pos-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:24px}
-.pos-side{display:flex;flex-direction:column;padding:14px 16px;gap:12px;min-height:0}
+.pos-side{display:flex;flex-direction:column;padding:12px 16px;gap:10px;min-height:0;overflow:auto}
 .pos-total{background:var(--white);border:1px solid var(--hair);border-radius:12px;padding:14px 18px}
 .pos-total .row{display:flex;justify-content:space-between;font-size:20px;color:var(--muted);padding:2px 0;font-variant-numeric:tabular-nums}
 .pos-total .big{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}
 .pos-total .big .l{font-size:24px;font-weight:600}
-.pos-total .big .n{font-family:var(--serif);font-size:72px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums;color:var(--green)}
+.pos-total .big .n{font-family:var(--serif);font-size:64px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums;color:var(--green)}
 .pos-total .cust{margin-top:8px;padding-top:8px;border-top:1px dashed var(--hair);font-size:19px;color:var(--pos-blue);display:flex;justify-content:space-between;align-items:center}
-.pos-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pos-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pos-actions.three{grid-template-columns:1fr 1fr 1fr}
-.pos-btn{min-height:76px;border-radius:12px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;font-weight:600;line-height:1.1;padding:6px 10px;color:#fff;transition:filter .12s}
+.pos-btn{min-height:72px;border-radius:12px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;font-weight:600;line-height:1.1;padding:6px 10px;color:#fff;transition:filter .12s}
 .pos-btn:active{filter:brightness(.9)}
 .pos-btn small{font-size:14px;font-weight:400;opacity:.85}
-.pos-btn.pay{background:var(--pos-green);min-height:104px;font-size:30px;grid-column:1 / -1}
+.pos-btn.pay{background:var(--pos-green);min-height:92px;font-size:30px;grid-column:1 / -1}
 .pos-btn.blue{background:var(--pos-blue)}.pos-btn.orange{background:var(--pos-orange)}.pos-btn.red{background:var(--pos-red)}.pos-btn.grey{background:var(--pos-grey)}
 .pos-btn.ghost{background:var(--white);color:var(--ink);border-color:var(--ink)}
 .pos-btn.brass{background:var(--brass)}

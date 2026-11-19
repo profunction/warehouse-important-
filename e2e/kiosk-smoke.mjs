@@ -15,7 +15,7 @@ try {
   const locs = await j(`/locations?site=${shop.id}`, null, boss); const zones = await j(`/zones?site=${shop.id}`, null, boss);
   const a1 = locs.find((l) => l.code === 'A-01-1'); const zoneA = zones.find((z) => z.code === 'A');
   const prods = await j('/products?search=9556001234567', null, boss); const cola = prods[0]; ok('找到示范产品可乐', !!cola);
-  if (cola && a1) await j('/shelf-assignments', { product_id: cola.id, location_id: a1.id, is_primary: true }, boss);
+  if (cola && a1) { const cur = await j(`/shelf-assignments?product=${cola.id}`, null, boss); if (!cur.some((s) => s.location_id === a1.id)) await j('/shelf-assignments', { product_id: cola.id, location_id: a1.id, is_primary: !cur.some((s) => s.is_primary) }, boss); }
   const racks = [1, 2, 3, 4].map((r) => ({ kind: 'RACK', zone_id: zoneA?.id ?? null, rack: r, location_id: locs.find((l) => l.code === `A-0${r}-1`)?.id ?? null, x: 3 + r * 3, y: 4, w: 1, h: 5, label: `A-0${r}` }));
   const elements = [{ kind: 'KIOSK', x: 1, y: 1, w: 1, h: 1, label: '屏' }, { kind: 'ENTRANCE', x: 0, y: 3, w: 1, h: 2, label: '入口' }, { kind: 'COUNTER', x: 14, y: 1, w: 4, h: 1, label: '收银' }, { kind: 'WALL', x: 10, y: 10, w: 8, h: 1 }, { kind: 'ZONE', zone_id: zoneA?.id ?? null, x: 5, y: 3, w: 13, h: 7, label: 'A 区', color: zoneA?.color ?? '#1565C0' }, ...racks];
   const draft = await j(`/sites/${shop.id}/map`, { width: 20, height: 14, kiosk: { x: 1, y: 1 }, entrance: { x: 0, y: 3 }, elements }, boss, 'PUT'); ok('G6 保存地图草稿', draft.status === 'DRAFT');

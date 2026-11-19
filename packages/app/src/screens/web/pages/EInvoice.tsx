@@ -6,6 +6,12 @@ import { errText, fmtDate, fmtMoney } from './_util.js';
 const ST_ZH: Record<string, string> = { QUEUED: '排队中', SUBMITTED: '已提交待验证', VALID: '有效', INVALID: '被拒', CANCELLED: '已取消', FAILED: '失败' };
 const stColor = (s: string) => (s === 'VALID' ? '#1B8A3A' : s === 'INVALID' || s === 'FAILED' ? '#C62828' : s === 'CANCELLED' ? '#9E9E9E' : '#F9A825');
 const DOC_ZH: Record<string, string> = { INVOICE: '发票', CREDIT_NOTE: '贷项', CONSOLIDATED: '合并', SELF_BILLED: '自开', REFUND_NOTE: '退款' };
+/** 二维码 PNG 要带登录头，所以用 fetch 转 blob 再显示 */
+function QrImg({ id }: { id: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => { let url: string | null = null; api(`/einvoice/submissions/${id}/qr`, { raw: true }).then(async (r: Response) => { url = URL.createObjectURL(await r.blob()); setSrc(url); }).catch(() => setSrc(null)); return () => { if (url) URL.revokeObjectURL(url); }; }, [id]);
+  return src ? <img alt="QR" src={src} style={{ width: 160, height: 160 }} /> : null;
+}
 const lastMonth = () => { const d = new Date(Date.now() + 8 * 3600_000); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() - 1); return d.toISOString().slice(0, 7); };
 
 export default function EInvoice() {
@@ -46,7 +52,7 @@ export default function EInvoice() {
             {sel.error_json && <pre style={{ maxHeight: 160, overflow: 'auto', background: '#FFF3F3', padding: 8, fontSize: 12 }}>{JSON.stringify(sel.error_json, null, 1)}</pre>}
             {sel.payload && <details><summary className="note">UBL JSON 文档</summary><pre style={{ maxHeight: 260, overflow: 'auto', fontSize: 11 }}>{JSON.stringify(sel.payload, null, 1)}</pre></details>}
           </div>
-          {sel.status === 'VALID' && <img alt="QR" src={`/api/v1/einvoice/submissions/${sel.id}/qr?t=${encodeURIComponent(localStorage.getItem('wh.access') ?? '')}`} onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')} style={{ width: 160, height: 160 }} />}
+          {sel.status === 'VALID' && <QrImg id={sel.id} />}
         </div>}
       </>}
       {tab === 'consolidated' && <>
