@@ -59,9 +59,10 @@ try {
   await page.goto(BASE + '/w/sales'); await page.getByText('销售与经营报表').first().waitFor({ timeout: 15000 });
   await page.getByTestId('sales-table').waitFor({ timeout: 15000 }); ok('销售报表表格', true);
   await page.getByText('净销售 RM').first().waitFor();
-  for (const t of ['损耗', '周转', '库龄', '应收账龄', '应付到期', '日结汇总']) { await page.getByRole('button', { name: t, exact: true }).click(); await page.waitForTimeout(600); }
+  const tabs = page.getByRole('main').locator('.tabs');
+  for (const t of ['损耗', '周转', '库龄', '应收账龄', '应付到期', '日结汇总']) { await tabs.getByRole('button', { name: t, exact: true }).click(); await page.waitForTimeout(600); }
   ok('各报表页签可切换', true);
-  await page.getByRole('button', { name: '销售', exact: true }).click(); await page.getByTestId('sales-table').waitFor();
+  await tabs.getByRole('button', { name: '销售', exact: true }).click(); await page.getByTestId('sales-table').waitFor();
   await page.screenshot({ path: shots + 'fin05-sales.png' });
   // 报表中心导航
   await page.goto(BASE + '/w/reports'); await page.getByTestId('report-center').waitFor({ timeout: 15000 }); ok('报表中心', true);
