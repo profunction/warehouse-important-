@@ -57,7 +57,7 @@ export async function periodRoutes(app: FastifyInstance) {
       if (cl.locked) throw new AppError(409, 'DUPLICATE', 'already locked');
       if (!cl.all_clear && !b.force) throw new AppError(400, 'PERIOD_NOT_CLEAR', cl.items.filter((i) => i.count > 0));
       const row = (await tx.query(`INSERT INTO period_lock (company_id, period_month, locked_by, checklist) VALUES ($1, $2::date, $3, $4) RETURNING *`, [req.ctx.companyId, monthStart(month), req.ctx.userId, JSON.stringify({ items: cl.items, all_clear: cl.all_clear, forced: !!b.force && !cl.all_clear, note: b.note ?? null, stats: cl.stats })])).rows[0];
-      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, after_json) VALUES ($1,$2,'PERIOD_LOCK','period_lock',$3)`, [req.ctx.companyId, req.ctx.userId, JSON.stringify({ month, forced: !!b.force && !cl.all_clear, note: b.note ?? null })]);
+      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, after_json) VALUES ($1,$2,'INSERT','period_lock',$3)`, [req.ctx.companyId, req.ctx.userId, JSON.stringify({ action: 'PERIOD_LOCK', month, forced: !!b.force && !cl.all_clear, note: b.note ?? null })]);
       reply.status(201); return { ...row, month };
     });
   });
@@ -68,7 +68,7 @@ export async function periodRoutes(app: FastifyInstance) {
     return withCompany(cx(req), async (tx) => {
       const r = await tx.query(`DELETE FROM period_lock WHERE period_month = $1::date RETURNING *`, [monthStart(month)]);
       if (!r.rowCount) throw new AppError(404, 'NOT_FOUND');
-      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, before_json, after_json) VALUES ($1,$2,'PERIOD_UNLOCK','period_lock',$3,$4)`, [req.ctx.companyId, req.ctx.userId, JSON.stringify(r.rows[0]), JSON.stringify({ month, reason: b.reason })]);
+      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, before_json, after_json) VALUES ($1,$2,'DELETE','period_lock',$3,$4)`, [req.ctx.companyId, req.ctx.userId, JSON.stringify(r.rows[0]), JSON.stringify({ action: 'PERIOD_UNLOCK', month, reason: b.reason })]);
       return { month, unlocked: true, reason: b.reason };
     });
   });

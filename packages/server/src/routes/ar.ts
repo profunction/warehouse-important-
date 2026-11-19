@@ -3,7 +3,8 @@
 //  - 不按 feature_flags.b2b_invoice 门控（A 模式小店也有记账客户；POS 的 B2B 销售由模块 C 自己门控）。
 //  - 手动开票的 unit_price 为不含税价，tax 按税码税率加在上面：line_total = qty×unit_price + tax；invoice.total = subtotal + tax。
 //  - 开票超过信用额（credit_limit > 0 时）返回 400 CREDIT_LIMIT_EXCEEDED；传 force=true 且有 approval.decide 权限可越过。
-//  - 手动开票默认不动库存。带 deduct_stock=true 且行有 product_id 时，同时建 sale（B2B / WEB，receipt_no = 发票号）并 applyMovement SALE（货位 → CUSTOMER）。
+//  - 手动开票默认不动库存。带 deduct_stock=true 且行有 product_id 时，同时建 sale（B2B / WEB，receipt_no = 发票号）并 applyMovement SALE（货位 → CUSTOMER）；
+//    数据库触发器会检查开票人有 movement.sale 且公司启用了 SALE 移动（B 模式由 POS 模块开通），否则 403 PERMISSION_DENIED / 400 REASON_DISABLED。
 //  - 收款只针对发票（payment.invoice_id 非空）；POS 现付的 B2B 销售不进应收。
 //  - 逾期状态 OVERDUE 由每日任务（lib/einvoiceJobs.ts runOverdueArCheck）更新；收款后变 PARTIAL/PAID。
 import type { FastifyInstance } from 'fastify';

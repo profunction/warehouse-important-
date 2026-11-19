@@ -38,11 +38,10 @@ export default function Receive() {
     catch { setPending([]); await startNoPo(); }
   })(); }, []);
 
-  const startNoPo = async () => {
-    fx.tap(); poLines.current = new Map(); setPo(null);
-    if (isOnline()) { try { setGrn(await api('/goods-receipts', { body: {} })); } catch { setGrn(null); } } else setGrn(null);
-    setStep('scan');
-  };
+  const noPo = useRef(false);
+  const startNoPo = async () => { fx.tap(); poLines.current = new Map(); setPo(null); setGrn(null); noPo.current = true; setStep('scan'); };
+  /** 无单收货的 GRN 在第一行确认时才开（在线才开；离线退回旧的 movement 方式） */
+  const ensureGrn = async () => { if (grn) return grn; if (!noPo.current || !isOnline()) return null; const g = await api('/goods-receipts', { body: {} }); setGrn(g); return g; };
   const startPo = async (p: any) => {
     fx.tap(); setBusy(true);
     try {
@@ -82,6 +81,7 @@ export default function Receive() {
     if (loc && !(await zoneAllows(loc.id, cur.product.category_id))) { setTarget(null); setErr(lang === 'zh' ? '这类产品不能放这个区' : lang === 'ms' ? 'Kategori ini tidak boleh di zon ini' : 'This category is not allowed in this zone'); setStep('location'); return; }
     const dmg = Number(damaged) || 0; const client_id = uuidv7(); setBusy(true);
     try {
+      const grn = await ensureGrn();
       if (grn) {
         const payload = { client_id, product_id: cur.product.id, qty: unitQty, damaged_qty: dmg, expiry_date: exp, to_location_id: loc?.id ?? null, photo_url: photo, performed_at: new Date().toISOString() };
         let locCode = loc?.code ?? '';
@@ -132,7 +132,7 @@ export default function Receive() {
     const nTickets = r.tickets_opened?.length ?? 0;
     return <DoneScreen title={t('receive_done')} lines={summ} warn={nTickets ? t('tickets_opened', { n: nTickets }) : undefined} onNext={() => { setLines([]); setResult(null); setGrn(null); setPo(null); setPending(null); setStep('list'); void (async () => { try { const list = isOnline() ? await api('/goods-receipts/pending') : []; setPending(list); if (!list.length) await startNoPo(); } catch { setPending([]); await startNoPo(); } })(); }} onHome={() => nav('/m')} />;
   }
-  const title = po ? `${t('receive_title')} · ${po.po_no}` : grn ? `${t('receive_title')} · ${t('receive_without_po')}` : t('receive_title');
+  const title = po ? `${t('receive_title')} · ${po.po_no}` : noPo.current && step !== 'list' ? `${t('receive_title')} · ${t('receive_without_po')}` : t('receive_title');
   return (
     <Page flash={flash}>
       <TopBar title={title} progress={lines.length ? `${lines.length}` : undefined} confirmBack={step !== 'scan' && step !== 'list'} onBack={() => (step === 'list' ? nav('/m') : step === 'scan' ? (lines.length ? void finish() : nav('/m')) : setStep('scan'))} />

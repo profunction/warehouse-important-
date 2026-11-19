@@ -37,11 +37,17 @@ beforeAll(async () => {
   const c = await api(app, sa).post('/admin/companies', { name: '财务测试公司', short_code: 'FIN01', plan: 'B', tin: 'C2345678901', boss_name: '财务老板', boss_phone: '0130000001', boss_pin: '111111' });
   expect(c.statusCode).toBe(201); companyId = c.json().company_id; siteId = c.json().site_id; bossId = c.json().boss_user_id;
   await adminPool.query(`UPDATE company SET msic_code = '47111', address = '{"line1":"1 Jalan Test","city":"Kuala Lumpur","postcode":"50000","state_code":"14"}'::jsonb WHERE id = $1`, [companyId]);
+  // B 模式默认不启用 SALE 移动（由 POS 模块开通）；deduct_stock 测试需要
+  await adminPool.query(`UPDATE movement_reason_enabled SET enabled = true WHERE company_id = $1 AND reason = 'SALE'`, [companyId]);
+  // 权限历史按时间校验：月结测试要补录两个月前的移动，把老板的角色生效时间提前
+  await adminPool.query(`UPDATE permission_history SET valid_from = now() - interval '1 year' WHERE user_id = $1`, [bossId]);
   boss = (await A().post('/auth/login', { company_code: 'FIN01', phone: '0130000001', pin: '111111' })).json().access_token;
   const mk = async (name: string, role: string, phone: string) => { const r = await api(app, boss).post('/users', { name, phone, pin: '222222', roles: [{ role_code: role, site_id: siteId }] }); expect(r.statusCode).toBe(201); return (await A().post('/auth/login', { company_code: 'FIN01', phone, pin: '222222' })).json().access_token; };
   acct = await mk('会计阿花', 'ACCOUNTS', '0130000002'); purch = await mk('采购阿强', 'PURCHASER', '0130000003'); mgr = await mk('经理阿伦', 'MANAGER', '0130000004');
   const sup = await api(app, boss).post('/suppliers', { name: '测试供应商', tin: 'C1111111111', payment_terms_days: 30 }); expect(sup.statusCode).toBe(201); supplierId = sup.json().id;
-  const cats = (await api(app, boss).get('/categories')).json();
+  // B 模式公司没有模板类别（靠导入），测试里建一个
+  const cat = await api(app, boss).post('/categories', { code: 'BEV', name_zh: '饮料', name_en: 'Beverage' }); expect(cat.statusCode).toBe(201);
+  const cats = [cat.json()];
   const p1 = await api(app, boss).post('/products', { name_zh: '矿泉水 500ml', name_en: 'Water 500ml', category_id: cats[0].id, cost_price: 5, sell_price: 8, min_level: 10, reorder_qty: 24, barcode: '9557000000011' }); expect(p1.statusCode).toBe(201); P1 = p1.json().id;
   const p2 = await api(app, boss).post('/products', { name_zh: '饼干 200g', name_en: 'Biscuit 200g', category_id: cats[0].id, cost_price: 3, sell_price: 4.5, min_level: 10, reorder_qty: 24, barcode: '9557000000022' }); P2 = p2.json().id;
   const locs = (await api(app, boss).get('/locations?include_virtual=true')).json();
@@ -115,8 +121,8 @@ describe('客户与应收 (B6)', () => {
     await api(app, acct).post(`/invoices/${inv.id}/payments`, { amount: 300, method: 'CASH' });
     expect((await adminPool.query(`SELECT status FROM ticket WHERE company_id = $1 AND type = 'OVERDUE_AR'`, [companyId])).rows[0].status).toBe('RESOLVED');
   });
-  it('开票带 deduct_stock：建 B2B 销售并扣库存', async () => {
-    const r = await api(app, acct).post('/invoices', { customer_id: custId, deduct_stock: true, from_location_id: locId, lines: [{ product_id: P1, qty: 5, unit_price: 8 }] });
+  it('开票带 deduct_stock：建 B2B 销售并扣库存（开票人要有 movement.sale，用老板）', async () => {
+    const r = await api(app, boss).post('/invoices', { customer_id: custId, deduct_stock: true, from_location_id: locId, lines: [{ product_id: P1, qty: 5, unit_price: 8 }] });
     expect(r.statusCode).toBe(201); expect(r.json().sale_id).toBeTruthy();
     expect((await api(app, boss).get(`/stock/lookup/9557000000011`)).json().total_qty).toBe(95);
     const s = await adminPool.query(`SELECT sale_type, source, status FROM sale WHERE id = $1`, [r.json().sale_id]); expect(s.rows[0]).toMatchObject({ sale_type: 'B2B', source: 'WEB', status: 'COMPLETED' });
@@ -271,7 +277,7 @@ describe('月结 (B12)', () => {
     const now = await api(app, boss).post('/movements', { product_id: P2, from_location_code: 'SUPPLIER', to_location_id: locId, qty: 1, reason: 'RECEIVE' }); expect(now.statusCode).toBe(201);
     expect((await api(app, acct).post(`/period/${M2}/unlock`, { reason: '会计不能解锁' })).statusCode).toBe(403);
     const un = await api(app, boss).post(`/period/${M2}/unlock`, { reason: '补录' }); expect(un.statusCode).toBe(200);
-    expect((await adminPool.query(`SELECT count(*)::int AS n FROM audit_log WHERE company_id = $1 AND action = 'PERIOD_UNLOCK'`, [companyId])).rows[0].n).toBe(1);
+    expect((await adminPool.query(`SELECT count(*)::int AS n FROM audit_log WHERE company_id = $1 AND action = 'DELETE' AND table_name = 'period_lock'`, [companyId])).rows[0].n).toBe(1);
     const after = await api(app, boss).post('/movements', { product_id: P2, from_location_code: 'SUPPLIER', to_location_id: locId, qty: 1, reason: 'RECEIVE', performed_at: `${M2}-10T09:00:00+08:00` }); expect(after.statusCode).toBe(201);
   });
 });
@@ -318,10 +324,10 @@ describe('报表与会计导出', () => {
   it('会计导出：CSV 借贷平衡；SQL Account / AutoCount xlsx 多工作表', async () => {
     const r = await api(app, acct).get(`/reports/accounting-export?month=${M0}&format=csv`); expect(r.statusCode).toBe(200); expect(r.headers['content-type']).toContain('text/csv');
     const lines = r.body.replace(/^﻿/, '').split('\r\n').filter(Boolean); expect(lines[0]).toBe('journal,date,doc_no,party_code,party_name,account_code,description,debit,credit,tax_code,tax_amount,reference'); expect(lines.length).toBeGreaterThan(5);
-    const parse = (l: string) => l.match(/("([^"]|"")*"|[^,]*)(,|$)/g)!.map((c) => c.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"'));
-    const body = lines.slice(1).map(parse).filter((c) => c[0] !== 'STOCK');
-    const debit = body.reduce((s, c) => s + Number(c[7] || 0), 0), credit = body.reduce((s, c) => s + Number(c[8] || 0), 0); expect(Math.abs(debit - credit)).toBeLessThan(0.01);
-    expect(body.some((c) => c[0] === 'SALES' && c[2] === invNo)).toBe(true); expect(body.some((c) => c[0] === 'PURCHASE' && c[2] === 'SI-001')).toBe(true); expect(body.some((c) => c[0] === 'PAYMENT')).toBe(true); expect(body.some((c) => c[0] === 'RECEIPT')).toBe(true);
+    const parse = (l: string): string[] => l.match(/("([^"]|"")*"|[^,]*)(,|$)/g)!.map((c: string) => c.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"'));
+    const body: string[][] = lines.slice(1).map(parse).filter((c: string[]) => c[0] !== 'STOCK');
+    const debit = body.reduce((s: number, c: string[]) => s + Number(c[7] || 0), 0), credit = body.reduce((s: number, c: string[]) => s + Number(c[8] || 0), 0); expect(Math.abs(debit - credit)).toBeLessThan(0.01);
+    expect(body.some((c: string[]) => c[0] === 'SALES' && c[2] === invNo)).toBe(true); expect(body.some((c: string[]) => c[0] === 'PURCHASE' && c[2] === 'SI-001')).toBe(true); expect(body.some((c: string[]) => c[0] === 'PAYMENT')).toBe(true); expect(body.some((c: string[]) => c[0] === 'RECEIPT')).toBe(true);
     for (const f of ['sqlaccount', 'autocount'] as const) {
       const x = await api(app, acct).get(`/reports/accounting-export?month=${M0}&format=${f}`); expect(x.statusCode, f).toBe(200);
       const wb = new ExcelJS.Workbook(); await wb.xlsx.load(x.rawPayload as any); expect(wb.worksheets.map((w) => w.name)).toContain('APPayment'); expect(wb.worksheets.length).toBe(6);
@@ -329,6 +335,8 @@ describe('报表与会计导出', () => {
     expect((await adminPool.query(`SELECT count(*)::int AS n FROM export_log WHERE company_id = $1 AND export_type LIKE 'accounting-%'`, [companyId])).rows[0].n).toBe(3);
   });
   it('月结自动任务：对账单 + 报表 Excel + 通知（合并发票已提交过则跳过）', async () => {
+    // 上月给客户开一张发票，让对账单有内容
+    expect((await api(app, acct).post('/invoices', { customer_id: custId, issue_date: `${M1}-05`, lines: [{ description: '上月服务', qty: 1, unit_price: 120 }] })).statusCode).toBe(201);
     const out = await runMonthEndAuto(M1, companyId); expect(out.length).toBe(1);
     expect(out[0].errors).toEqual([]); expect(out[0].statements).toBeGreaterThanOrEqual(1); expect(out[0].reports).toBe(3); expect(out[0].consolidated).toBe(0);
     expect((await adminPool.query(`SELECT count(*)::int AS n FROM statement WHERE company_id = $1 AND period_start = $2::date`, [companyId, `${M1}-01`])).rows[0].n).toBeGreaterThanOrEqual(1);

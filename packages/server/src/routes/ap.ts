@@ -189,7 +189,7 @@ export async function apRoutes(app: FastifyInstance) {
   app.get('/ap/due', { preHandler: requirePerm(...VIEW) }, async (req) => {
     const q = z.object({ days: z.coerce.number().int().min(0).max(365).default(30) }).parse(req.query);
     return withCompany(cx(req), async (tx) => {
-      const rows = (await tx.query(`${LIST_SQL} WHERE si.status IN ('PAYABLE','PARTIAL') AND (si.due_date IS NULL OR si.due_date <= (now() AT TIME ZONE 'Asia/Kuala_Lumpur')::date + $1) ORDER BY si.due_date NULLS LAST`, [q.days])).rows;
+      const rows = (await tx.query(`${LIST_SQL} WHERE si.status IN ('PAYABLE','PARTIAL') AND (si.due_date IS NULL OR si.due_date <= (now() AT TIME ZONE 'Asia/Kuala_Lumpur')::date + $1::int) ORDER BY si.due_date NULLS LAST`, [q.days])).rows;
       return { days: q.days, rows, total: r2(rows.reduce((s, r) => s + Number(r.outstanding), 0)), overdue: r2(rows.filter((r) => r.due_date && new Date(r.due_date) < new Date()).reduce((s, r) => s + Number(r.outstanding), 0)) };
     });
   });

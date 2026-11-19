@@ -55,9 +55,9 @@ export async function consolidatedPreview(tx: Tx, siteId: string, month: string)
   return { month, site_id: siteId, ...head, total: Number(head.total), receipt_range: first, by_category, existing };
 }
 async function consolidatedDoc(tx: Tx, periodId: string, cfg: MyInvoisConfig) {
-  const p = (await tx.query(`SELECT p.*, s.code AS site_code FROM consolidated_invoice_period p JOIN site s ON s.id = p.site_id WHERE p.id = $1`, [periodId])).rows[0];
+  const p = (await tx.query(`SELECT p.*, s.code AS site_code, to_char(p.period_month, 'YYYY-MM') AS month FROM consolidated_invoice_period p JOIN site s ON s.id = p.site_id WHERE p.id = $1`, [periodId])).rows[0];
   if (!p) throw new AppError(404, 'NOT_FOUND', 'period');
-  const month = String(p.period_month).slice(0, 7);
+  const month: string = p.month;
   const pv = await consolidatedPreview(tx, p.site_id, month);
   const docNo = `CONS-${p.site_code}-${month.replace('-', '')}`;
   const lines: UblLine[] = pv.by_category.map((c: any) => ({ description: `${c.name} (consolidated receipts ${pv.receipt_range?.first_no ?? ''} - ${pv.receipt_range?.last_no ?? ''})`, qty: 1, unit: 'PCS', unitPrice: round2(Number(c.total) - Number(c.tax)), taxType: c.tax_type ?? (Number(c.tax) > 0 ? '01' : '06'), taxRate: Number(c.tax_rate ?? 0), taxAmount: round2(Number(c.tax)), lineTotal: round2(Number(c.total)) }));

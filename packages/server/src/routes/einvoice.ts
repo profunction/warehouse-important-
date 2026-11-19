@@ -87,7 +87,7 @@ export async function einvoiceRoutes(app: FastifyInstance) {
       const s = (await tx.query(`SELECT * FROM einvoice_submission WHERE id = $1 FOR UPDATE`, [id])).rows[0]; if (!s) throw notFound();
       const r = await cancelSubmission(tx, req.ctx.companyId, s, b.reason);
       if (s.ref_type === 'consolidated_invoice_period') await tx.query(`UPDATE consolidated_invoice_period SET locked = false WHERE id = $1`, [s.ref_id]);
-      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, row_id, after_json) VALUES ($1,$2,'EINVOICE_CANCEL','einvoice_submission',$3,$4)`, [req.ctx.companyId, req.ctx.userId, id, JSON.stringify({ reason: b.reason })]);
+      await tx.query(`INSERT INTO audit_log (company_id, user_id, action, table_name, row_id, after_json) VALUES ($1,$2,'UPDATE','einvoice_submission',$3,$4)`, [req.ctx.companyId, req.ctx.userId, id, JSON.stringify({ action: 'EINVOICE_CANCEL', reason: b.reason })]);
       return r;
     });
   });
