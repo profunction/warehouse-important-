@@ -73,7 +73,7 @@ cd warehouse-important-; pnpm install; pnpm approve-builds
 cd warehouse-important-; pnpm dev:app
 ```
 
-浏览器开 http://localhost:5173 。PostgreSQL 密码不是 `postgres` 时先设 `$env:DATABASE_ADMIN_URL = "postgres://postgres:你的密码@localhost:5432/postgres"`。
+浏览器开 http://localhost:5173 。要给手机用（含 https 扫码），一条命令：`.\phone.ps1`（起系统 + Cloudflare 免费隧道，见 docs/design/phase4/01-免费上线.md）。PostgreSQL 密码不是 `postgres` 时先设 `$env:DATABASE_ADMIN_URL = "postgres://postgres:你的密码@localhost:5432/postgres"`。
 
 ## 示范数据
 
