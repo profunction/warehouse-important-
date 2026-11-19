@@ -1,0 +1,11 @@
+{
+  "name": "wh-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "仓店通 POS 硬件桥接：WebSocket 127.0.0.1:9123 → 收据打印机（ESC/POS）、钱箱、电子秤",
+  "bin": { "wh-bridge": "./index.mjs" },
+  "scripts": { "start": "node index.mjs", "simulate": "node index.mjs --simulate" },
+  "dependencies": { "ws": "^8.18.0" },
+  "optionalDependencies": { "serialport": "^12.0.0", "usb": "^2.14.0" }
+}
