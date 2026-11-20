@@ -1,4 +1,4 @@
-# 一键：在这台 Windows 电脑跑起系统，并用 Cloudflare 免费隧道给手机一个 https 网址。
+﻿# 一键：在这台 Windows 电脑跑起系统，并用 Cloudflare 免费隧道给手机一个 https 网址。
 # 用法：在项目文件夹打开 PowerShell，运行  .\phone.ps1
 # 之后每次要给手机用，都只需再跑这一条。关掉这个窗口隧道就停，系统本身还在跑。
 $ErrorActionPreference = "Stop"
@@ -12,8 +12,9 @@ Say "1/6 检查 Node、pnpm、PostgreSQL"
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) { throw "没有安装 Node.js，请先装 Node 22 LTS：https://nodejs.org" }
 if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) { corepack enable; corepack prepare pnpm@10.28.0 --activate }
 if (-not (Test-NetConnection localhost -Port 5432 -InformationLevel Quiet -WarningAction SilentlyContinue)) {
-  Write-Host "PostgreSQL 没在跑。打开「服务」把 postgresql-x64-16 启动，或在管理员 PowerShell 运行：  net start postgresql-x64-16" -ForegroundColor Yellow
-  throw "PostgreSQL 未启动"
+  $svc = Get-Service -Name "postgresql*" -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($svc) { Write-Host "启动 PostgreSQL 服务 $($svc.Name)"; try { Start-Service $svc.Name } catch { Write-Host "启动失败，请用管理员 PowerShell 运行：  net start $($svc.Name)" -ForegroundColor Yellow; throw } ; Start-Sleep -Seconds 3 }
+  else { Write-Host "没找到 PostgreSQL 服务。请安装 PostgreSQL 16（postgres 密码设为 postgres）后再跑。" -ForegroundColor Yellow; throw "PostgreSQL 未安装" }
 }
 
 Say "2/6 安装依赖（第一次要几分钟）"

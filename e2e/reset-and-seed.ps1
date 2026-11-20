@@ -1,4 +1,4 @@
-# Windows 版：重置开发库 → 启动服务器 → 建示范数据。在项目根目录用 PowerShell 运行：  .\e2e\reset-and-seed.ps1
+﻿# Windows 版：重置开发库 → 启动服务器 → 建示范数据。在项目根目录用 PowerShell 运行：  .\e2e\reset-and-seed.ps1
 $ErrorActionPreference = "Stop"
 Set-Location (Join-Path $PSScriptRoot "..")
 if (-not $env:DATABASE_ADMIN_URL) { $env:DATABASE_ADMIN_URL = "postgres://postgres:postgres@localhost:5432/postgres" }
