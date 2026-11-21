@@ -1,9 +1,10 @@
 // 模块 E 端到端冒烟：DEMO1 老板用 API 画简单地图并发布 → 生成 KIOSK 密钥（API 或直接插表）→ 大屏 1080×1920 截待机、搜"可乐"、结果地图 → 手机库存员 /m/help 问"可乐放哪里"截图
+import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 import { createHash, randomBytes } from 'node:crypto';
 import { execSync } from 'node:child_process';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = []; const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const j = async (path, body, token, method) => { const r = await fetch(BASE + '/api/v1' + path, { method: method ?? (body ? 'POST' : 'GET'), headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: body ? JSON.stringify(body) : undefined }); const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = t; } if (!r.ok) throw new Error(`${method ?? 'POST'} ${path} ${r.status} ${t.slice(0, 200)}`); return d; };
 

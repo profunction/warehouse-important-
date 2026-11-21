@@ -16,7 +16,7 @@
 
 ## 本地运行
 
-需要 Node 22、pnpm 10、PostgreSQL 16（本机 5432，超级用户 postgres/postgres）。
+需要 Node 22 或 24、pnpm 10、PostgreSQL 16（本机 5432，超级用户 postgres/postgres）。
 
 ```bash
 pnpm install
@@ -46,7 +46,7 @@ bash packages/server/scripts/fetch-fonts.sh
 
 ## Windows 上运行
 
-1. 安装 Git、Node 22 LTS、PostgreSQL 16（安装时把 postgres 用户密码设为 `postgres`，端口 5432）。
+1. 安装 Git、Node 22 或 24、PostgreSQL 16（安装时把 postgres 用户密码设为 `postgres`，端口 5432）。
 2. 打开 PowerShell：
 
 ```powershell

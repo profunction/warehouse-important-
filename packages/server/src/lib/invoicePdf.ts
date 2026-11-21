@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 // 发票 / 对账单 PDF（pdfkit，A4）。中文字体处理与 lib/labels.ts 一致：按顺序找 Noto Sans SC，找不到退回 Helvetica。
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
@@ -8,7 +9,7 @@ const dateStr = (v: any) => (v ? new Date(v).toISOString().slice(0, 10) : '');
 function registerCjk(doc: PDFKit.PDFDocument): boolean {
   const candidates: [string, string | undefined][] = [
     [process.env.LABEL_FONT || '', process.env.LABEL_FONT_FAMILY],
-    [new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url).pathname, undefined],
+    [fileURLToPath(new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url)), undefined],
     ['/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 'WenQuanYi Zen Hei'],
     ['/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 'NotoSansCJKsc-Regular'],
   ];

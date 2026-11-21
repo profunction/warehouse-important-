@@ -1,7 +1,8 @@
 // POS 端到端冒烟：DEMO1 收银员登录 → /pos/open 开班 → 主屏输条码 9556001234567 → 付款现金 → 完成。截图 1280×800 到 e2e/shots/pos-*.png
 import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = [];
 const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();

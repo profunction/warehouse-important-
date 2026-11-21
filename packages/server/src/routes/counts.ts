@@ -277,6 +277,16 @@ export async function countsRoutes(app: FastifyInstance) {
             CASE WHEN count(cl.id) FILTER (WHERE cl.variance_qty IS NOT NULL) = 0 THEN NULL ELSE round(100.0 * count(cl.id) FILTER (WHERE cl.variance_qty = 0) / count(cl.id) FILTER (WHERE cl.variance_qty IS NOT NULL), 1) END AS accuracy_pct
      FROM count_session s LEFT JOIN count_line cl ON cl.session_id = s.id
      WHERE s.assigned_to = $1 AND s.status <> 'CANCELLED' AND s.scheduled_for > current_date - 30 GROUP BY s.id ORDER BY s.scheduled_for DESC, s.created_at DESC`, [req.ctx.userId])).rows));
+  /** 取消还没提交的盘点（指派错人、重复指派）：只允许 ASSIGNED / IN_PROGRESS，不动库存 */
+  app.post('/counts/:id/cancel', { preHandler: requirePerm('count.assign') }, async (req) => {
+    const { id } = z.object({ id: z.string().uuid() }).parse(req.params);
+    const b = z.object({ reason: z.string().max(200).optional() }).parse(req.body ?? {});
+    return withCompany(cx(req), async (tx) => {
+      const r = (await tx.query(`UPDATE count_session SET status = 'CANCELLED', note = concat_ws(' | ', note, $2::text) WHERE id = $1 AND status IN ('ASSIGNED','IN_PROGRESS') RETURNING id, session_no, status`, [id, `取消：${b.reason ?? ''}`])).rows[0];
+      if (!r) throw new AppError(409, 'COUNT_STATE');
+      return r;
+    });
+  });
   app.post('/counts/:id/start', { preHandler: requirePerm('count.enter', 'count.assign') }, async (req) => {
     const { id } = req.params as any;
     return withCompany(cx(req), async (tx) => { const s = await loadSession(tx, id, true); assertMine(req.ctx, s); const r = await startSession(tx, req.ctx, s); return { id: r.id, status: r.status, started_at: r.started_at, locations: await sessionLocations(tx, r), lines: await sessionLinesBlind(tx, r.id) }; });

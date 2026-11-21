@@ -1,9 +1,10 @@
 // 网页端端到端：超管开店向导 → 进入公司 → 加员工 → 导入 Excel 全流程 → 产品/库存/报表/审计页面
 import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
 import ExcelJS from 'exceljs';
 import { writeFileSync } from 'node:fs';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = []; const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch(); const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'zh-CN', acceptDownloads: true, reducedMotion: 'reduce' }); const page = await ctx.newPage();
 page.on('pageerror', (e) => console.error('PAGEERROR', e.message)); page.on('dialog', (d) => d.accept());

@@ -1,7 +1,8 @@
 // 手机端端到端冒烟：登录 → 首页 → 收货（键盘枪模拟）→ 完成 → 查询 → 离线补货 → 恢复同步
+import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = [];
 const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { existsSync } from 'node:fs';
@@ -13,7 +14,7 @@ export async function makeLabelsPdf(items: LabelItem[], size: '70x40' | '100x50'
   // 中文字体：按顺序尝试，找不到退回 Helvetica（中文会显示为方框）
   const candidates: [string, string | undefined][] = [
     [process.env.LABEL_FONT || '', process.env.LABEL_FONT_FAMILY],
-    [new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url).pathname, undefined],
+    [fileURLToPath(new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url)), undefined],
     ['/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 'WenQuanYi Zen Hei'],
     ['/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 'NotoSansCJKsc-Regular'],
   ];

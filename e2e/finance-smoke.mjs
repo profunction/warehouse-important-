@@ -1,8 +1,9 @@
 // 模块 D 端到端：DEMO1 老板登录网页 → /w/ar 建客户、开票、收款 → /w/einvoice 看列表 → /w/month-end 看清单 → /w/sales 看报表；截图到 e2e/shots/。
 // 跑法：bash e2e/up.sh && node e2e/finance-smoke.mjs
 import { chromium } from 'playwright';
+import { fileURLToPath } from 'node:url';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = []; const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch(); const ctx = await browser.newContext({ viewport: { width: 1360, height: 900 }, locale: 'zh-CN', acceptDownloads: true, reducedMotion: 'reduce' }); const page = await ctx.newPage();
 page.on('pageerror', (e) => console.error('PAGEERROR', e.message)); page.on('dialog', (d) => d.accept());

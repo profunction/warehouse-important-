@@ -1,7 +1,8 @@
 // 盘点端到端冒烟：DEMO1 老板网页 /w/counts 新建盘点指派库存员 → 库存员手机 /m/count 走一个货位 → 提交 → 老板手机 /m/approvals 批准
+import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = [];
 const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();
@@ -20,6 +21,10 @@ try {
   const bossToken = await loginPhone(w, '0120000001', '111111');
   const h = { authorization: `Bearer ${bossToken}` };
   const get = async (p) => (await w.request.get(BASE + '/api/v1' + p, { headers: h })).json();
+  // 可重复跑：先取消之前没做完的盘点和没批的盘点审批，免得库存员看到多个同货位的任务
+  const openCounts = await get('/counts');
+  for (const c of (Array.isArray(openCounts) ? openCounts : [])) if (['ASSIGNED', 'IN_PROGRESS'].includes(c.status)) await w.request.post(BASE + `/api/v1/counts/${c.id}/cancel`, { headers: h, data: { reason: 'e2e cleanup' } });
+  for (const a of (await get('/approvals/pending'))) if (a.type === 'COUNT_VARIANCE') await w.request.post(BASE + `/api/v1/approvals/${a.id}/decide`, { headers: h, data: { decision: 'reject', note: 'e2e cleanup' } });
   // 保证 S-01 有可乐库存（第一次跑时可能是空的）
   const loc = (await get('/locations')).find((l) => l.code === 'S-01');
   let atLoc = (await get(`/stock/by-location/${loc.id}`)).find((r) => r.barcode === '9556001234567');
@@ -47,11 +52,11 @@ try {
   await loginPhone(p, '0120000009', '222222');
   await p.waitForFunction(async () => (await (await import('/src/offline/db.ts')).db.location.count()) > 0, null, { timeout: 20000 }).catch(() => {});
   await p.getByTestId('tile-count').click();
-  await p.getByTestId('count-loc-S-01').waitFor({ timeout: 15000 });
-  ok('K1 今日盘点显示货位 S-01', await p.getByTestId('count-loc-S-01').isVisible());
+  await p.getByTestId('count-loc-S-01').first().waitFor({ timeout: 15000 });
+  ok('K1 今日盘点显示货位 S-01', await p.getByTestId('count-loc-S-01').first().isVisible());
   const body1 = await p.content(); ok('K1 不显示系统量', !body1.includes('system_qty') && !body1.includes(`系统 ${systemQty}`));
   await p.screenshot({ path: shots + 'c02-count-list.png' });
-  await p.getByTestId('count-loc-S-01').click();
+  await p.getByTestId('count-loc-S-01').first().click();
   await p.getByTestId('scan-area').waitFor();
   await wedge(p, 'A-01-1');
   await p.getByTestId('error-screen').waitFor({ timeout: 5000 });

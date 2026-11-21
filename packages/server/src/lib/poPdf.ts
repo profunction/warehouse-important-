@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 // 采购单 PDF / Excel（模块 A）。pdfkit 中文字体处理同 lib/labels.ts；文件写到 config.uploadDir，用 files.ts 的签名 URL 返回。
 // 约定：文件名 po-<po_no>.pdf / .xlsx（重复生成覆盖）；金额 RM 两位小数；三语产品名用 zh，没有则 en / ms。
 import PDFDocument from 'pdfkit';
@@ -33,7 +34,7 @@ export async function loadPoDoc(tx: Tx, poId: string): Promise<PoDoc> {
 function registerCjk(doc: PDFKit.PDFDocument): boolean {
   const candidates: [string, string | undefined][] = [
     [process.env.LABEL_FONT || '', process.env.LABEL_FONT_FAMILY],
-    [new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url).pathname, undefined],
+    [fileURLToPath(new URL('../../fonts/NotoSansSC-Regular.otf', import.meta.url)), undefined],
     ['/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 'WenQuanYi Zen Hei'],
     ['/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 'NotoSansCJKsc-Regular'],
   ];

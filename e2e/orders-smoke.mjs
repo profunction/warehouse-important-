@@ -1,8 +1,9 @@
 // 模块 A 端到端冒烟：DEMO1 老板网页 /w/orders 手动建 PO（截图）→ 库存员手机 /m/receive 选 PO 收货（截图）→ 完成对单 → PO 已收齐
 // 登录与扫码方式同 e2e/web-shot.mjs、e2e/mobile-smoke.mjs（手机模式登录 + HID 扫描枪模拟）
+import { fileURLToPath } from 'node:url';
 import { chromium, devices } from 'playwright';
 const BASE = process.env.BASE || 'http://localhost:5173';
-const shots = new URL('./shots/', import.meta.url).pathname;
+const shots = fileURLToPath(new URL('./shots/', import.meta.url));
 const results = [];
 const ok = (n, c, e = '') => { results.push([c ? 'PASS' : 'FAIL', n, e]); if (!c) process.exitCode = 1; };
 const browser = await chromium.launch();
