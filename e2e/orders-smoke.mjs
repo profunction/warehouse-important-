@@ -12,7 +12,7 @@ const loginPhone = async (page, phone, pin) => {
   await page.goto(BASE + '/'); await page.getByTestId('mode-phone').click();
   await page.getByTestId('company').fill('DEMO1'); await page.getByTestId('phone').fill(phone);
   for (const d of pin) await page.locator(`.keypad [data-key="${d}"]`).click();
-  await page.getByTestId('home-grid').waitFor({ timeout: 15000 });
+  await page.waitForURL(/\/(m|w)(\/|$)/, { timeout: 15000 }).then(() => page.waitForTimeout(800));
   return page.evaluate(() => localStorage.getItem('wh.access'));
 };
 let poNo = '';

@@ -5,7 +5,7 @@ const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { 
 page: {
   await p.goto(BASE + '/'); await p.getByTestId('mode-phone').click(); await p.getByTestId('company').fill('DEMO1'); await p.getByTestId('phone').fill('0120000001');
   for (const d of '111111') await p.locator(`.keypad [data-key="${d}"]`).click();
-  await p.getByTestId('home-grid').waitFor({ timeout: 15000 });
+  await p.waitForURL(/\/(m|w)(\/|$)/, { timeout: 15000 }).then(() => p.waitForTimeout(800));
   await p.goto(BASE + '/w/theme'); await p.getByText('实时预览').waitFor({ timeout: 15000 });
   await p.screenshot({ path: 'e2e/shots/w10-theme-editor.png' });
   await p.getByRole('button', { name: /市场晨光/ }).click(); await p.waitForTimeout(300);

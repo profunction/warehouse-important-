@@ -101,3 +101,63 @@
 .pos-kv .neg{color:var(--red)}.pos-kv .pos{color:var(--green)}
 .pos-center{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
 @media (max-width: 900px){ .pos-body{grid-template-columns:1fr} .pos-side{border-top:1px solid var(--hair)} .pos-cols{grid-template-columns:1fr} }
+
+/* ---------- 紧凑版（店主反馈按钮太大太花）：只有付款实心绿色，其余白底、彩色图标；触屏仍 ≥52px ---------- */
+.pos{font-size:16px}
+.pos-top{height:52px;font-size:15px;gap:12px}
+.pos-top .brand{font-size:18px}
+.pos-top .pdot{font-size:13px}
+.pos-top .pdot i{width:9px;height:9px}
+.pos-top .lang button{min-height:32px;min-width:38px;font-size:12px}
+.pos-top .iconbtn{min-height:34px;font-size:13px;padding:0 10px}
+.pos-scan input{height:48px;font-size:17px;border-width:1px}
+.pos-line{min-height:60px;grid-template-columns:48px 1fr 150px 110px;gap:10px}
+.pos-line .thumb{width:40px;height:40px}
+.pos-line .name{font-size:16px}
+.pos-line .sub{font-size:12px}
+.pos-line .qp{font-size:15px}
+.pos-line .amt{font-size:18px}
+.pos-empty{font-size:17px}
+.pos-total .row{font-size:14px}
+.pos-total .big .l{font-size:16px}
+.pos-total .big .n{font-size:46px}
+.pos-total .cust{font-size:15px}
+.pos .pos-btn{min-height:52px!important;font-size:15px!important;border-radius:10px;background:var(--white);color:var(--ink);border-color:var(--hair);flex-direction:row;gap:8px;font-weight:600}
+.pos .pos-btn:hover{background:var(--paper-dim)}
+.pos .pos-btn small{display:none}
+.pos .pos-btn svg{width:18px;height:18px}
+.pos .pos-btn.blue svg{color:var(--pos-blue)}
+.pos .pos-btn.orange svg{color:var(--pos-orange)}
+.pos .pos-btn.red{color:var(--red)}
+.pos .pos-btn.grey svg{color:var(--muted)}
+.pos .pos-btn.pay{background:var(--pos-green);color:#fff;border-color:transparent;min-height:60px!important;font-size:19px!important}
+.pos .pos-btn.pay small{display:inline;font-size:13px;opacity:.85;font-weight:400}
+.pos .pos-btn.pay svg{color:#fff}
+.pos .pos-btn.brass{background:var(--white);color:var(--ink);border-color:var(--hair)}
+.pos .pos-btn.brass svg{color:var(--brass)}
+.pos .pos-btn.brass.next{background:var(--brass);color:#fff;border-color:transparent}
+.pos .pos-btn.brass.next svg{color:#fff}
+.pos .pos-btn.next{min-height:56px!important;font-size:18px!important}
+.pos-panel{padding:18px 20px;gap:12px;width:min(640px,96vw)}
+.pos-panel h2{font-size:21px}
+.pos-panel h2 small{font-size:13px}
+.pos-panel .hint{font-size:14px}
+.pos-keypad button{min-height:52px;font-size:22px}
+.pos-amount .l{font-size:15px}
+.pos-amount .n{font-size:40px}
+.pos-quick button{min-height:46px;font-size:16px}
+.pos-card{min-height:56px;padding:8px 14px}
+.pos-card .s{font-size:13px}
+.pos-card .r{font-size:18px}
+.pos-field label{font-size:12px}
+.pos-field input,.pos-field select{height:44px;font-size:16px}
+.pos-chips button{min-height:38px;font-size:14px;padding:0 14px}
+.pos-pre{font-size:13px}
+.pos-full .t{font-size:28px}
+.pos-full .change{font-size:64px}
+.pos-full .change small{font-size:20px}
+.pos-full .sub{font-size:16px}
+.pos-bar{font-size:14px;padding:8px 14px}
+.pos-tile{min-height:92px;font-size:14px}
+.pos-kv{font-size:15px}
+.pos-kv .big{font-size:26px}

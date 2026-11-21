@@ -10,7 +10,7 @@ const loginPhone = async (page, phone, pin) => {
   await page.goto(BASE + '/'); await page.getByTestId('mode-phone').click();
   await page.getByTestId('company').fill('DEMO1'); await page.getByTestId('phone').fill(phone);
   for (const d of pin) await page.locator(`.keypad [data-key="${d}"]`).click();
-  await page.getByTestId('home-grid').waitFor({ timeout: 20000 });
+  await page.waitForURL(/\/(m|w)(\/|$)/, { timeout: 20000 }).then(() => page.waitForTimeout(800));
   return page.evaluate(() => localStorage.getItem('wh.access'));
 };
 const wedge = async (page, code) => { for (const ch of code) await page.keyboard.press(ch); await page.keyboard.press('Enter'); };

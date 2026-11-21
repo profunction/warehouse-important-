@@ -37,7 +37,7 @@ export default function App() {
   if (me.sites.length > 1 && !me.site && !me.user.is_super_admin && loc.pathname !== '/select-site') return <Navigate to="/select-site" replace />;
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={me.user.is_super_admin ? '/w/admin/companies' : '/m'} replace />} />
+      <Route path="/" element={<Navigate to={me.user.is_super_admin ? '/w/admin/companies' : (window.innerWidth >= 900 && me.roles.some((r) => ['BOSS', 'MANAGER', 'PURCHASER', 'ACCOUNTS'].includes(r)) ? '/w/dashboard' : '/m')} replace />} />
       <Route path="/select-site" element={<SelectSite />} />
       <Route path="/m" element={<Home />} />
       <Route path="/m/lookup" element={<Lookup />} />

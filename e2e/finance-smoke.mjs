@@ -12,7 +12,7 @@ try {
   // 老板手机号登录（DEMO1）
   await page.goto(BASE + '/'); await page.getByTestId('mode-phone').click(); await page.getByTestId('company').fill('DEMO1'); await page.getByTestId('phone').fill('0120000001');
   for (const d of '111111') await page.locator(`.keypad [data-key="${d}"]`).click();
-  await page.getByTestId('home-grid').waitFor({ timeout: 15000 }); ok('老板登录', true);
+  await page.waitForURL(/\/(m|w)(\/|$)/, { timeout: 15000 }).then(() => page.waitForTimeout(800)); ok('老板登录', true);
 
   // 1. 客户与应收：建客户
   await page.goto(BASE + '/w/ar'); await page.getByText('客户与应收').first().waitFor({ timeout: 15000 });
