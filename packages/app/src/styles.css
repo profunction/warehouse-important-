@@ -364,74 +364,90 @@ html[data-preset="stitch"] .web .side .brand,html[data-preset="stitch"] .web .si
 html[data-preset="stitch"] .web .side a{color:var(--muted);border-radius:var(--radius-sm);border-left:0}html[data-preset="stitch"] .web .side a.active{background:var(--paper-dim);font-weight:700}
 html[data-preset="stitch"] .web .side .grp{color:var(--stroke)}
 
-/* ---------- 电脑大屏（宽 ≥ 900px）：正常桌面尺寸，按钮 44px、正文 16px；手机上仍是老人大字规则 ---------- */
-html[data-density="large"]{--btn-h:84px}
+/* ---------- 统一尺寸：手机和电脑一样是正常 App 尺寸（店主要求）。老人要大字：设置 → 字体 特大 ---------- */
+:root{--fs-body:17px;--fs-title:24px;--fs-key:44px;--fs-btn:16px;--fs-small:14px;--fs-label:11px;--btn-h:48px;--btn-min:44px;--pad:20px}
+html[data-font="large"]{--fs-body:22px;--fs-title:30px;--fs-key:56px;--fs-btn:20px;--fs-small:17px;--fs-label:13px;--btn-h:64px}
+html[data-density="large"]{--btn-h:60px}
+.topstrip{padding-top:20px}
+.wordmark{font-size:12px;letter-spacing:.24em}
+.seal{width:34px;height:34px;font-size:16px}
+.topbar{min-height:52px;padding:6px 12px 0;border-bottom:1px solid var(--hair)}
+.topbar .title{font-size:17px}
+.topbar .progress{font-size:14px;min-width:0}
+.btn{padding:0 16px;gap:8px;letter-spacing:0}
+.btn svg{width:18px;height:18px}
+.btn-back{min-height:40px;min-width:0;font-size:14px;padding:0 6px}
+.btn-xl{min-height:50px}
+.hero{padding-top:16px}
+.brass-rule{margin-top:10px}
+.home-grid,html[data-home="tiles"] .home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:16px var(--pad) 8px;margin-top:0}
+.home-tile,html[data-home="tiles"] .home-tile{aspect-ratio:auto;min-height:108px;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px;border:1px solid var(--hair);border-radius:12px}
+.home-tile:first-child{border-top:1px solid var(--hair)}
+.home-tile .no,.home-tile .chev{display:none}
+.home-tile .icon,html[data-home="tiles"] .home-tile .icon{width:28px;height:28px}
+.home-tile .icon svg{width:24px;height:24px}
+.home-tile .zh{font-size:16px;font-weight:600}
+.home-tile .ms{font-size:12px}
+.home-tile .badge{position:absolute;top:10px;right:12px;font-size:20px;margin:0}
+.home-tile .badge.soon{position:static;font-size:11px}
+.bottombar{min-height:52px;padding:10px var(--pad) 14px;border-top:1px solid var(--hair);gap:10px}
+.lang{min-height:36px;min-width:36px;font-size:12px}
+.card{min-height:60px;padding:12px 2px;gap:12px}
+.card .thumb{width:40px;height:40px;box-shadow:none;border:1px solid var(--hair)}
+.card .thumb svg{width:22px;height:22px}
+.prod-head{padding:12px var(--pad)}
+.prod-head .thumb{width:52px;height:52px;box-shadow:none;border:1px solid var(--hair)}
+.prod-head .k{font-size:14px}
+.scan-wrap{aspect-ratio:16/10}
+.scan-frame{width:200px;height:120px}
+.instruct,.instruct>span:not(.ic){font-size:20px}
+.instruct{padding-top:16px}
+.qty-display{padding-top:10px}
+.qty-display .n{font-size:var(--fs-key)}
+.keypad button{min-height:52px;font-size:22px}
+.quick .btn{min-height:40px;font-size:14px;white-space:nowrap;padding:0 8px}
+.row2 .btn{min-height:44px;font-size:15px}
+.months button{min-height:48px;font-size:15px}
+.seg .btn{min-height:42px;font-size:14px;white-space:nowrap;padding:0 8px}
+.login{gap:14px;padding-top:28px}
+.pin-dots span{width:14px;height:14px}
+.empty{font-size:15px;padding:40px var(--pad)}
+.empty .big{width:56px;height:56px}
+.section{padding-top:18px}
+.head .zh{font-size:24px}
+.kv{padding:12px var(--pad)}
+.kv b{font-size:20px}
+.done-screen{padding:40px var(--pad)}
+.done-screen .msg{font-size:24px}
+.done-screen .big{width:60px;height:60px}
+.err-screen .msg{font-size:22px}
+.err-screen .big{width:72px;height:72px}
+.modal{padding:22px}
+.overlay-bar{min-height:40px}
+input,select,textarea{padding:8px 2px;min-height:42px}
+@media (max-width:420px){.btn-back span{display:none}}
+
+/* 电脑大屏（宽 ≥ 900px）：居中面板，首页四格一排，键盘和确认按钮靠右 */
 @media (min-width:900px){
-  :root{--fs-body:16px;--fs-title:26px;--fs-key:44px;--fs-btn:15px;--fs-small:13px;--fs-label:11px;--btn-h:44px;--btn-min:40px;--pad:32px}
-  html[data-font="large"]{--fs-body:18px;--fs-title:30px;--fs-key:52px;--fs-btn:17px;--fs-small:15px;--btn-h:50px}
-  html[data-density="large"]{--btn-h:50px}
+  :root{--fs-body:16px;--fs-btn:15px;--fs-small:13px;--btn-h:44px;--btn-min:40px;--pad:32px}
   html,body,#root{background:var(--paper-dim)}
   .mobile{max-width:780px;margin:28px auto;min-height:calc(100% - 56px);border:1px solid var(--hair);border-radius:14px;box-shadow:0 8px 30px rgba(21,32,26,.06);overflow:hidden}
-  .topstrip{padding-top:22px}
-  .topbar{min-height:56px;padding:8px 20px 0;border-bottom:1px solid var(--hair)}
-  .topbar .title{font-size:17px}
-  .topbar .progress{font-size:14px}
-  .btn{padding:0 18px;gap:8px;letter-spacing:0}
-  .btn svg{width:18px;height:18px}
-  .btn-back{min-height:40px;min-width:0;font-size:14px}
+  .topbar{padding:8px 20px 0}
   .btn-xl{min-height:46px}
   .confirm-wrap{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
   .confirm-wrap .btn{width:auto;min-width:200px}
-  .hero{padding-top:18px}
-  .brass-rule{margin-top:10px}
-  .home-grid,html[data-home="tiles"] .home-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:20px var(--pad) 8px;margin-top:0}
-  .home-tile,html[data-home="tiles"] .home-tile{aspect-ratio:auto;min-height:120px;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px;border:1px solid var(--hair);border-radius:12px}
-  .home-tile:first-child{border-top:1px solid var(--hair)}
-  .home-tile .no,.home-tile .chev{display:none}
-  .home-tile .icon,html[data-home="tiles"] .home-tile .icon{width:28px;height:28px}
-  .home-tile .icon svg{width:24px;height:24px}
-  .home-tile .zh{font-size:16px;font-weight:600}
-  .home-tile .ms{font-size:12px}
-  .home-tile .badge{position:absolute;top:12px;right:14px;font-size:22px;margin:0}
-  .home-tile:hover{background:var(--paper-dim)}
-  .bottombar{min-height:52px;padding:10px var(--pad) 16px;border-top:1px solid var(--hair)}
-  .lang{min-height:32px;font-size:12px}
-  .card{min-height:60px;padding:12px 2px;gap:14px}
-  .card:hover{background:var(--paper-dim)}
-  .card .thumb{width:40px;height:40px;box-shadow:none;border:1px solid var(--hair)}
-  .prod-head{padding:14px var(--pad)}
-  .prod-head .thumb{width:52px;height:52px;box-shadow:none;border:1px solid var(--hair)}
-  .prod-head .k{font-size:14px}
+  .home-grid,html[data-home="tiles"] .home-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:20px var(--pad) 8px}
+  .home-tile{min-height:120px;padding:16px}
+  .home-tile:hover,.card:hover{background:var(--paper-dim)}
   .scan-wrap{max-width:520px;aspect-ratio:16/9}
-  .scan-frame{width:200px;height:110px}
-  .instruct,.instruct>span:not(.ic){font-size:20px}
-  .qty-display{padding-top:12px}
-  .qty-display .n{font-size:44px}
   .keypad{max-width:340px;margin:6px var(--pad) 12px auto}
   .keypad button{min-height:50px;font-size:20px}
   .keypad button:hover{background:var(--paper-dim)}
-  .quick{max-width:340px;margin-left:auto}
-  .quick{justify-content:flex-end}
-  .quick .btn{flex:0 0 auto;width:auto;min-width:72px;min-height:38px;font-size:13px;white-space:nowrap;padding:0 12px}
+  .quick{max-width:340px;margin-left:auto;justify-content:flex-end}
+  .quick .btn{flex:0 0 auto;width:auto;min-width:72px;padding:0 12px}
   .row2{justify-content:flex-end}
-  .row2 .btn{min-height:42px;font-size:14px;flex:0 1 auto;width:auto;min-width:160px}
+  .row2 .btn{flex:0 1 auto;width:auto;min-width:160px;min-height:42px}
   .months{max-width:420px}
-  .months button{min-height:46px;font-size:15px}
-  .seg .btn{min-height:40px;font-size:14px;white-space:nowrap;padding:0 10px}
-  .login{max-width:400px;margin:0 auto;padding-top:44px;gap:14px}
-  .pin-dots span{width:14px;height:14px}
-  .empty{font-size:15px;padding:40px var(--pad)}
-  .empty .big{width:56px;height:56px}
-  .section{padding-top:18px}
-  .head .zh{font-size:24px}
-  .kv{padding:12px var(--pad)}
-  .kv b{font-size:20px}
-  .done-screen{padding:40px var(--pad)}
-  .done-screen .msg{font-size:24px}
-  .done-screen .big{width:60px;height:60px}
-  .err-screen .msg{font-size:22px}
-  .err-screen .big{width:72px;height:72px}
-  .modal{max-width:420px;padding:22px}
-  .overlay-bar{min-height:40px}
-  input,select,textarea{padding:8px 2px;min-height:40px}
+  .login{max-width:400px;margin:0 auto;padding-top:44px}
+  .modal{max-width:420px}
 }

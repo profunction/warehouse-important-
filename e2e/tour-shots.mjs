@@ -11,7 +11,7 @@ const login = async (p, phone, pin) => {
   await p.waitForURL(/\/(m|w|pos)/, { timeout: 15000 }); await p.waitForTimeout(1200);
 };
 const shot = async (p, name, wait = 900) => { await p.waitForTimeout(wait); await p.screenshot({ path: `${shots}tour-${name}.png` }); console.log('ok', name); };
-const phone = { ...devices['Pixel 7'], locale: 'zh-CN', reducedMotion: 'reduce' };
+const phone = { ...devices["Pixel 7"], locale: 'zh-CN', reducedMotion: 'reduce' };
 try {
   // 老板手机
   { const c = await b.newContext(phone); const p = await c.newPage();
