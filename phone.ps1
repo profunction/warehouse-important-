@@ -36,6 +36,9 @@ try {
   node e2e/seed-demo.mjs
 }
 
+# 示范店补齐 40 个常见商品（已有就跳过），收银格子才像真店
+try { node e2e/seed-more.mjs | Out-Null } catch { }
+
 Say "4/6 网页与手机端（Vite）：关掉旧的，重新启动，保证用最新配置并固定在 5173"
 Get-NetTCPConnection -LocalPort 5173,5174 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 1

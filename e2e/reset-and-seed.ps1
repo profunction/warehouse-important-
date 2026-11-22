@@ -10,4 +10,5 @@ node packages/db/scripts/bootstrap-admin.mjs admin@demo.local 123456 "系统管�
 Start-Process -FilePath "pnpm.cmd" -ArgumentList "--filter @wh/server start" -WindowStyle Minimized
 for ($i = 0; $i -lt 40; $i++) { try { Invoke-WebRequest -UseBasicParsing http://localhost:3000/api/v1/health | Out-Null; break } catch { Start-Sleep -Milliseconds 500 } }
 node e2e/seed-demo.mjs
+node e2e/seed-more.mjs
 Write-Host "`n示范数据已建好。现在另开一个窗口运行:  pnpm dev:app   然后浏览器开 http://localhost:5173" -ForegroundColor Green

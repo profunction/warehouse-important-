@@ -17,7 +17,7 @@ try {
   { const c = await b.newContext(ctxOpt); const p = await c.newPage(); await login(p, '0120000001', '111111'); await shot(p, '05-boss-landing', 1500); await c.close(); }
   { const c = await b.newContext(ctxOpt); const p = await c.newPage(); await login(p, '0120000008', '333333'); await p.goto(BASE + '/pos'); await p.waitForTimeout(1500);
     if (p.url().includes('/pos/open')) { await shot(p, '06-pos-open'); const btn = p.getByTestId('pos-open-submit').or(p.getByRole('button', { name: /开始收银|开班/ })).first(); if (await btn.isVisible()) await btn.click(); await p.waitForTimeout(1500); }
-    const scan = p.locator('.pos-scan input').first(); for (const bc of ['9556001234567', '9556002000011', '9556003000022']) { await scan.fill(bc); await scan.press('Enter'); await p.waitForTimeout(400); }
+    const scan = p.getByTestId('pos-scan'); for (const bc of ['9556001234567', '9556002000011', '9556003000022']) { await scan.fill(bc); await scan.press('Enter'); await p.waitForTimeout(400); }
     await shot(p, '07-pos-main', 1000); await c.close(); }
 } catch (e) { console.error('ERR', e.message); }
 await b.close();

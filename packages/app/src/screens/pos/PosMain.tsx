@@ -1,4 +1,4 @@
-// P2 收银主屏：左 60% 购物车，右 40% 合计 + 大按钮。叠加层：P3 称重、P4 搜索、P10 折扣、P12 主管 PIN、数量键盘。
+// P2 收银主屏（跟 StoreHub / Loyverse / Square 同一种布局）：左边商品格子 + 类别标签，右边当前订单 + 大「收款」按钮。叠加层：P3 称重、P4 搜索、P10 折扣、P12 主管 PIN、数量键盘。
 // 扫描：自动聚焦输入框接 HID 扫描枪（字符 + Enter）；纯数字 8–14 位当条码，其他当搜索词。
 // 条码解析：本地 Dexie（product/barcode/称重码）→ 在线兜底 GET /products/by-barcode/:code（并写回本地缓存）。
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,7 +16,7 @@ import { lineTotal, lineDiscount, cartNet, roundTo, type CartLine } from '../../
 import { PosTop } from './PosApp.js';
 import { usePos } from './posStore.js';
 import { Keypad, Amount, Overlay, Btn, Tri, money, r2 } from './PosUi.js';
-import { Scale, Percent, ShieldCheck, Search, Package, Trash2, PauseCircle, Undo2, Building2, Sigma, Hash, CreditCard } from 'lucide-react';
+import { Scale, Percent, ShieldCheck, Search, Package, Trash2, PauseCircle, Undo2, Building2, Sigma, Hash, Minus, Plus, X, ScanLine, ListOrdered } from 'lucide-react';
 
 type Overlay = null | { kind: 'weigh'; product: CProduct; barcode?: string | null } | { kind: 'qty'; key: string } | { kind: 'discount'; key: string } | { kind: 'pin'; key: string; pct: number } | { kind: 'search'; q: string; results: CProduct[] };
 
@@ -26,6 +26,11 @@ export default function PosMain() {
   const [ov, setOv] = useState<Overlay>(null); const [err, setErr] = useState<string | null>(null); const [askClear, setAskClear] = useState(false); const [toast, setToast] = useState<string | null>(null);
   const [input, setInput] = useState(''); const inputRef = useRef<HTMLInputElement>(null);
   const [kp, setKp] = useState(''); const [pin, setPin] = useState(''); const [scaleReading, setScaleReading] = useState<{ weight_kg: number; stable: boolean } | null>(null);
+  const [cats, setCats] = useState<any[]>([]); const [prods, setProds] = useState<CProduct[]>([]); const [cat, setCat] = useState<string>('ALL');
+  useEffect(() => { (async () => { setCats((await db.category.toArray()).filter((c: any) => c.is_active !== false)); setProds((await db.product.toArray()).filter((p) => p.is_active)); })(); }, []);
+  const catOf = (id: string) => cats.find((c) => c.id === id);
+  const query = input.trim().toLowerCase();
+  const shown = prods.filter((p) => (cat === 'ALL' || p.category_id === cat) && (!query || /^\d{8,14}$/.test(query) ? true : ((p.search_text ?? '').toLowerCase().includes(query) || (p.name_zh ?? '').includes(input.trim()) || (p.name_en ?? '').toLowerCase().includes(query) || (p.name_ms ?? '').toLowerCase().includes(query)))).slice(0, 120);
   const focus = useCallback(() => { if (!ov) setTimeout(() => inputRef.current?.focus(), 50); }, [ov]);
   useEffect(() => { focus(); const i = setInterval(() => { if (!ov && document.activeElement !== inputRef.current && (document.activeElement?.tagName ?? '') !== 'INPUT') inputRef.current?.focus(); }, 1500); return () => clearInterval(i); }, [ov, focus]);
   useEffect(() => { if (toast) { const x = setTimeout(() => setToast(null), 2500); return () => clearTimeout(x); } }, [toast]);
@@ -53,12 +58,15 @@ export default function PosMain() {
       }
       setErr(t('pos_not_found')); return;
     }
-    // 搜索
+    // 文字：格子已经按输入过滤；只有一个结果时直接加入
     const q = code.toLowerCase();
+    const local = prods.filter((p) => (p.search_text ?? '').toLowerCase().includes(q) || (p.name_zh ?? '').includes(code) || (p.name_en ?? '').toLowerCase().includes(q) || (p.name_ms ?? '').toLowerCase().includes(q) || (p.sku ?? '').toLowerCase() === q);
+    if (local.length === 1) { addResolved(local[0], {}); setInput(''); return; }
+    if (local.length > 1) { setInput(code); return; }
     const results = await db.product.filter((p) => p.is_active && ((p.search_text ?? '').toLowerCase().includes(q) || (p.name_zh ?? '').includes(code) || (p.name_en ?? '').toLowerCase().includes(q) || (p.name_ms ?? '').toLowerCase().includes(q) || (p.sku ?? '').toLowerCase() === q)).limit(24).toArray();
     setOv({ kind: 'search', q: code, results });
   };
-  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { const v = input; setInput(''); void handleCode(v); } };
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { const v = input; setInput(''); void handleCode(v); } if (e.key === 'Escape') setInput(''); };
   const readScale = async () => { const r = await bridge.scale(); setScaleReading(r); if (r?.stable) { setKp(String(r.weight_kg)); } };
   useEffect(() => { if (ov?.kind === 'weigh') { void readScale(); const i = setInterval(() => { void readScale(); }, 1000); return () => clearInterval(i); } }, [ov?.kind]);   // eslint-disable-line react-hooks/exhaustive-deps
   const confirmWeigh = () => { if (ov?.kind !== 'weigh') return; const kg = Number(kp); if (!(kg > 0)) return; pos.addProduct(ov.product, { weight_kg: r2(kg * 1000) / 1000, barcode: ov.barcode }); fx.scanOk(); setOv(null); };
@@ -79,43 +87,62 @@ export default function PosMain() {
     <div className="pos" onClick={focus}>
       <PosTop />
       {toast && <div className="pos-bar ok" data-testid="pos-toast">{toast}</div>}
-      <div className="pos-body">
-        <div className="pos-cart">
-          <div className="pos-scan">
-            <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} placeholder={t('pos_scan_or_type')} autoFocus autoComplete="off" inputMode="text" data-testid="pos-scan" />
-            <button className="pos-btn ghost" style={{ minHeight: 72, minWidth: 100, flexDirection: 'row' }} onClick={() => { const v = input; setInput(''); void handleCode(v || ' '); }} data-testid="pos-search-btn"><Search size={26} />{t('pos_find')}</button>
+      <div className="pos2">
+        <section className="pos2-catalog">
+          <div className="pos2-search">
+            <label className="pos2-input"><ScanLine size={18} /><input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKey} placeholder={t('pos_scan_or_type')} autoFocus autoComplete="off" inputMode="text" data-testid="pos-scan" />{input && <button className="pos2-x" onClick={(e) => { e.stopPropagation(); setInput(''); focus(); }} aria-label="clear" data-testid="pos-search-btn"><X size={16} /></button>}</label>
+            <button className="pos2-link" onClick={() => nav('/pos/hold')}><ListOrdered size={16} />{t('pos_hold')}</button>
+            <button className="pos2-link" onClick={() => nav('/pos/returns')} data-testid="pos-returns"><Undo2 size={16} />{t('pos_returns')}</button>
+            <button className="pos2-link" onClick={() => nav('/pos/close')} data-testid="pos-close"><Sigma size={16} />{t('pos_close_day')}</button>
           </div>
-          <div className="pos-lines" data-testid="pos-lines">
-            {pos.lines.length === 0 && <div className="pos-empty"><Package size={56} strokeWidth={1.2} /><div>{t('pos_empty_cart')}</div><div style={{ fontSize: 18 }}>{t2('pos_empty_cart')}</div></div>}
+          <div className="pos2-cats">
+            <button className={cat === 'ALL' ? 'on' : ''} onClick={() => setCat('ALL')}>{t('pos_all')}</button>
+            {cats.filter((c) => prods.some((p) => p.category_id === c.id)).map((c) => <button key={c.id} className={cat === c.id ? 'on' : ''} onClick={() => setCat(c.id)}><i style={{ background: c.color }} />{n(c)}</button>)}
+          </div>
+          <div className="pos2-grid" data-testid="pos-grid">
+            {shown.map((p) => { const c = catOf(p.category_id); return (
+              <button key={p.id} className="pos2-tile" onClick={(e) => { e.stopPropagation(); addResolved(p, {}); }} data-testid="search-result">
+                <span className="img" style={{ background: c?.color ? `${c.color}1F` : undefined, color: c?.color }}>{p.photo_url ? <img src={p.photo_url} alt="" /> : <b>{(n(p) || '?').slice(0, 1)}</b>}</span>
+                <span className="nm">{n(p)}</span>
+                <span className="pr">{money(p.sell_price)}{p.is_weighed ? <small>/kg</small> : null}</span>
+              </button>); })}
+            {shown.length === 0 && <div className="pos2-none"><Search size={28} strokeWidth={1.4} /><div>{t('pos_no_results')}</div></div>}
+          </div>
+        </section>
+
+        <aside className="pos2-order">
+          <header>
+            <div><b>{t('pos_current_order')}</b><span>{t('pos_items', { n: pos.lines.reduce((a, l) => a + (l.product.is_weighed ? 1 : l.qty), 0) })}</span></div>
+            {pos.customer
+              ? <button className="pos2-cust on" onClick={() => pos.setCustomer(null)} title={t('pos_clear_customer')}><Building2 size={16} />{pos.customer.name}<X size={14} /></button>
+              : <button className="pos2-cust" onClick={() => nav('/pos/b2b')} data-testid="pos-b2b"><Building2 size={16} />{t('pos_b2b')}</button>}
+          </header>
+          <div className="pos2-lines" data-testid="pos-lines">
+            {pos.lines.length === 0 && <div className="pos2-empty"><Package size={36} strokeWidth={1.2} /><div>{t('pos_empty_cart')}</div></div>}
             {pos.lines.map((l) => (
-              <button key={l.key} className={`pos-line ${pos.selected === l.key ? 'sel' : ''}`} onClick={(e) => { e.stopPropagation(); pos.select(l.key); }} data-testid="cart-line">
-                <div className="thumb">{l.product.photo_url ? <img src={l.product.photo_url} alt="" /> : <Package size={34} strokeWidth={1.3} />}</div>
-                <div><div className="name">{n(l.product)}</div><div className="sub">{l.barcode ?? l.product.sku}{l.discount_pct ? <span className="disc"> · -{l.discount_pct}% ({money(lineDiscount(l))})</span> : null}</div></div>
-                <div className="qp">{lineQtyText(l)}</div>
+              <div key={l.key} className={`pos2-line ${pos.selected === l.key ? 'sel' : ''}`} onClick={(e) => { e.stopPropagation(); pos.select(l.key); }} data-testid="cart-line">
+                <div className="info"><div className="nm">{n(l.product)}</div><div className="sub">{lineQtyText(l)}{l.discount_pct ? <span className="disc"> · -{l.discount_pct}%</span> : null}</div></div>
+                {l.product.is_weighed
+                  ? <button className="kg" onClick={(e) => { e.stopPropagation(); pos.select(l.key); setKp(''); setOv({ kind: 'qty', key: l.key }); }}>{Number(l.weight_kg ?? 0).toFixed(3)} kg</button>
+                  : <span className="step"><button onClick={(e) => { e.stopPropagation(); if (l.qty <= 1) pos.removeLine(l.key); else pos.setQty(l.key, l.qty - 1); }} aria-label="-"><Minus size={14} /></button><b>{l.qty}</b><button onClick={(e) => { e.stopPropagation(); pos.setQty(l.key, l.qty + 1); }} aria-label="+"><Plus size={14} /></button></span>}
                 <div className="amt">{lineTotal(l).toFixed(2)}</div>
-              </button>
+              </div>
             ))}
           </div>
-        </div>
-        <div className="pos-side">
-          <div className="pos-total">
-            <div className="row"><span>{t('pos_items', { n: pos.lines.reduce((a, l) => a + (l.product.is_weighed ? 1 : l.qty), 0) })}</span><span>{t('pos_subtotal')} {net.toFixed(2)}</span></div>
-            {hasCashRounding && <div className="row"><span>{t('pos_rounding')} ({t('pos_cash')})</span><span>{(roundTo(net, pos.settings.cash_rounding) - net > 0 ? '+' : '') + (roundTo(net, pos.settings.cash_rounding) - net).toFixed(2)}</span></div>}
-            <div className="big"><span className="l">{t('pos_total')}<br /><small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 14 }}>{t2('pos_total')} · {t('pos_tax_incl')}</small></span><span className="n" data-testid="pos-total">{net.toFixed(2)}</span></div>
-            {pos.customer && <div className="cust"><span><Building2 size={18} /> {pos.customer.name} · {t('pos_credit_left')} {money(pos.customer.credit_available)}</span><button className="iconbtn" style={{ minHeight: 40, border: '1px solid var(--hair)', background: 'transparent', fontSize: 16 }} onClick={() => pos.setCustomer(null)}>{t('pos_clear_customer')}</button></div>}
+          <div className="pos2-tools">
+            <button onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } setKp(''); setOv({ kind: 'qty', key: sel.key }); }} data-testid="pos-qty"><Hash size={16} />{t('pos_qty')}</button>
+            <button onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } setKp(String(sel.discount_pct || '')); setOv({ kind: 'discount', key: sel.key }); }} data-testid="pos-discount"><Percent size={16} />{t('pos_discount')}</button>
+            <button onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } pos.removeLine(sel.key); }} data-testid="pos-delete"><Trash2 size={16} />{t('pos_delete_line')}</button>
+            <button onClick={() => (pos.lines.length ? void hold() : nav('/pos/hold'))} data-testid="pos-hold"><PauseCircle size={16} />{t('pos_hold')}</button>
+            <button onClick={() => pos.lines.length && setAskClear(true)} disabled={!pos.lines.length} data-testid="pos-clear"><X size={16} />{t('pos_clear_cart')}</button>
           </div>
-          <div className="pos-actions">
-            <Btn color="pay" icon={<CreditCard size={30} />} onClick={() => pos.lines.length && nav('/pos/pay')} disabled={!pos.lines.length} testid="pos-pay">{t('pos_pay')} <small>{t2('pos_pay')} · {money(net)}</small></Btn>
-            <Btn k="pos_qty" color="blue" icon={<Hash size={24} />} onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } setKp(''); setOv({ kind: 'qty', key: sel.key }); }} testid="pos-qty" />
-            <Btn k="pos_delete_line" color="red" icon={<Trash2 size={24} />} onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } pos.removeLine(sel.key); }} testid="pos-delete" />
-            <Btn k="pos_discount" color="orange" icon={<Percent size={24} />} onClick={() => { if (!sel) { setErr(t('pos_select_line_first')); return; } setKp(String(sel.discount_pct || '')); setOv({ kind: 'discount', key: sel.key }); }} testid="pos-discount" />
-            <Btn k="pos_hold" color="grey" icon={<PauseCircle size={24} />} onClick={() => (pos.lines.length ? void hold() : nav('/pos/hold'))} testid="pos-hold" />
-            <Btn k="pos_returns" color="brass" icon={<Undo2 size={24} />} onClick={() => nav('/pos/returns')} testid="pos-returns" />
-            <Btn k="pos_b2b" color="blue" icon={<Building2 size={24} />} onClick={() => nav('/pos/b2b')} testid="pos-b2b" />
-            <Btn k="pos_close_day" color="grey" icon={<Sigma size={24} />} onClick={() => nav('/pos/close')} testid="pos-close" />
+          <div className="pos2-sum">
+            <div><span>{t('pos_subtotal')}</span><span>{money(net)}</span></div>
+            {hasCashRounding && <div><span>{t('pos_rounding')}（{t('pos_cash')}）</span><span>{(roundTo(net, pos.settings.cash_rounding) - net > 0 ? '+' : '') + (roundTo(net, pos.settings.cash_rounding) - net).toFixed(2)}</span></div>}
+            <div className="tot"><span>{t('pos_total')}<small>{t('pos_tax_incl')}</small></span><span data-testid="pos-total">{net.toFixed(2)}</span></div>
           </div>
-          {pos.lines.length > 0 && <button className="pos-btn ghost row" style={{ minHeight: 56 }} onClick={() => setAskClear(true)} data-testid="pos-clear"><Trash2 size={20} /> {t('pos_clear_cart')} <small>{t2('pos_clear_cart')}</small></button>}
-        </div>
+          <button className="pos2-pay" onClick={() => pos.lines.length && nav('/pos/pay')} disabled={!pos.lines.length} data-testid="pos-pay"><span>{t('pos_pay')}</span><b>{money(net)}</b></button>
+        </aside>
       </div>
 
       {ov?.kind === 'weigh' && (

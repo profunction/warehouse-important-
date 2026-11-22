@@ -1,5 +1,6 @@
 // pos 模块字符串（并行开发：本文件只由 pos 模块维护）。格式同 strings.ts：key: [zh, ms, en]
 export const STR_POS: Record<string, [string, string, string]> = {
+  pos_all: ['全部', 'Semua', 'All'], pos_current_order: ['当前订单', 'Pesanan semasa', 'Current order'],
   pos: ['收银', 'Jualan', 'Sell'], pos_title: ['收银台', 'Kaunter', 'Checkout'],
   pos_open_shift: ['开班', 'Buka Syif', 'Open Shift'], pos_opening_cash: ['开班现金', 'Tunai permulaan', 'Opening cash'], pos_enter_opening_cash: ['输入钱箱里的开班现金', 'Masukkan tunai permulaan dalam laci', 'Enter the opening cash in the drawer'],
   pos_terminal: ['机号', 'Terminal', 'Terminal'], pos_cashier: ['收银员', 'Juruwang', 'Cashier'], pos_shift_open_since: ['开班于 {t}', 'Dibuka {t}', 'Opened {t}'],
