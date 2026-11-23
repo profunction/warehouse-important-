@@ -20,13 +20,14 @@ if (-not (Test-NetConnection localhost -Port 5432 -InformationLevel Quiet -Warni
 Say "2/6 安装依赖（每次都跑，代码更新后新依赖才会装上；没变化时几秒就过）"
 pnpm.cmd install
 
-Say "3/6 数据库与 API 服务器"
-if (-not (Up "http://localhost:3000/api/v1/health")) {
-  $seeded = $false
-  try { node packages/db/scripts/migrate.mjs | Out-Null; $seeded = $true } catch { }
-  Start-Process -FilePath "pnpm.cmd" -ArgumentList "--filter @wh/server dev" -WindowStyle Minimized
-  for ($i = 0; $i -lt 60; $i++) { if (Up "http://localhost:3000/api/v1/health") { break }; Start-Sleep -Milliseconds 500 }
-}
+Say "3/6 数据库更新与 API 服务器（每次都关掉旧的重开，保证用最新代码和最新数据库结构）"
+Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+Start-Sleep -Seconds 1
+node packages/db/scripts/migrate.mjs
+if ($LASTEXITCODE -ne 0) { throw "数据库更新失败，看上面的红字" }
+Start-Process -FilePath "pnpm.cmd" -ArgumentList "--filter @wh/server dev" -WindowStyle Minimized
+for ($i = 0; $i -lt 90; $i++) { if (Up "http://localhost:3000/api/v1/health") { break }; Start-Sleep -Milliseconds 500 }
+if (-not (Up "http://localhost:3000/api/v1/health")) { throw "API 服务器没起来，看最小化的服务器窗口里的报错" }
 # 还没有示范公司就建一个（超管 admin@demo.local / 123456，老板 0120000001 / 111111）
 try {
   $r = Invoke-WebRequest -UseBasicParsing -Method POST -ContentType "application/json" -Body '{"company_code":"DEMO1","phone":"0120000001","pin":"111111"}' http://localhost:3000/api/v1/auth/login -ErrorAction Stop
