@@ -114,6 +114,7 @@ for f in mobile-smoke web-smoke orders-smoke counts-smoke pos-smoke finance-smok
 | TELEGRAM_BOT_TOKEN / TELEGRAM_WEBHOOK_SECRET / PUBLIC_URL | 空 | Telegram 审批按钮和日报；也可在网页"公司设定 → Telegram"按公司填。未配置时消息写入"通知"页 |
 | MYINVOIS_ENV | STUB | STUB 本地模拟 / SANDBOX 预生产 / PRODUCTION；凭据在网页"电子发票 → 设定"填 |
 | ANTHROPIC_API_KEY | 空 | 机器人意图分类用 Claude；不填用规则 |
+| SIGNUP_MODE | open | open 任何人可在登录页"开新店"自助开店（免费试用）；off 关闭，只能超管开店。员工"申请加入"一直开放，老板批准才生效 |
 | JOBS_DISABLED | 0 | 设 1 关闭定时任务（订货建议、循环盘点、日报、电子发票重试、Pandal 拉取、工单提醒） |
 
 ## Docker

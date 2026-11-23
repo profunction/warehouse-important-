@@ -8,8 +8,12 @@ export default function Users() {
   const [rows, setRows] = useState<any[]>([]); const [roles, setRoles] = useState<any[]>([]); const [sites, setSites] = useState<any[]>([]); const [msg, setMsg] = useState('');
   const [form, setForm] = useState<any | null>(null); const [created, setCreated] = useState<any | null>(null); const [showPerms, setShowPerms] = useState<string | null>(null);
   const canManage = has('user.manage');
+  const [joins, setJoins] = useState<any[]>([]); const [joinPick, setJoinPick] = useState<Record<string, { role_code: string; site_id: string }>>({});
+  const loadJoins = async () => { if (!canManage) return; try { setJoins(await api('/join-requests')); } catch { /* 旧服务器没有这个接口 */ } };
+  const approveJoin = async (j: any) => { const pick = joinPick[j.id] ?? { role_code: j.role_code, site_id: me?.site?.id ?? sites[0]?.id ?? '' }; try { await api(`/join-requests/${j.id}/approve`, { body: { role_code: pick.role_code, site_id: pick.site_id || null } }); setMsg(`${j.name} 已加入，可以用手机号和自己设的 PIN 登录`); await Promise.all([load(), loadJoins()]); } catch (e) { setMsg(errText(e)); } };
+  const rejectJoin = async (j: any) => { if (!window.confirm(`拒绝 ${j.name} 的申请？`)) return; try { await api(`/join-requests/${j.id}/reject`, { body: {} }); await loadJoins(); } catch (e) { setMsg(errText(e)); } };
   const load = async () => { try { setRows(await api('/users')); } catch (e) { setMsg(errText(e)); } };
-  useEffect(() => { void load(); api('/roles').then(setRoles).catch(() => {}); api('/sites').then(setSites).catch(() => {}); }, []);
+  useEffect(() => { void load(); void loadJoins(); api('/roles').then(setRoles).catch(() => {}); api('/sites').then(setSites).catch(() => {}); }, []);
   const openNew = () => { setForm({ name: '', phone: '', email: '', language: 'zh', roles: [{ role_code: 'WAREHOUSE', site_id: me?.site?.id ?? sites[0]?.id ?? null }] }); setCreated(null); };
   const openEdit = (u: any) => { setForm({ id: u.id, name: u.name, phone: u.phone ?? '', email: u.email ?? '', language: u.language, is_active: u.is_active, roles: u.roles.map((r: any) => ({ role_code: r.role_code, site_id: r.site_id })) }); setCreated(null); };
   const save = async () => {
@@ -28,6 +32,17 @@ export default function Users() {
   return (
     <div>
       <h1>用户管理</h1>
+      {joins.length > 0 && <div style={{ border: '1px solid var(--brass)', borderRadius: 12, padding: '14px 16px', marginBottom: 18, background: '#fff' }} data-testid="join-panel">
+        <h2 style={{ marginTop: 0 }}>员工申请加入（{joins.length}）</h2>
+        <table><thead><tr><th>名字</th><th>手机</th><th>申请时间</th><th>备注</th><th>岗位</th><th>站点</th><th></th></tr></thead><tbody>
+          {joins.map((j) => { const pick = joinPick[j.id] ?? { role_code: j.role_code, site_id: me?.site?.id ?? sites[0]?.id ?? '' }; const setPick = (k: string, v: string) => setJoinPick({ ...joinPick, [j.id]: { ...pick, [k]: v } }); return (
+            <tr key={j.id} data-testid="join-row"><td>{j.name}</td><td>{j.phone}</td><td>{new Date(j.created_at).toLocaleString('zh-CN')}</td><td>{j.note ?? ''}</td>
+              <td><select value={pick.role_code} onChange={(e) => setPick('role_code', e.target.value)}>{roles.filter((r: any) => !['BOSS', 'SUPER_ADMIN'].includes(r.code)).map((r: any) => <option key={r.code} value={r.code}>{ROLE_ZH[r.code] ?? r.code}</option>)}</select></td>
+              <td><select value={pick.site_id} onChange={(e) => setPick('site_id', e.target.value)}>{sites.map((s2: any) => <option key={s2.id} value={s2.id}>{s2.code} {s2.name}</option>)}</select></td>
+              <td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-primary" onClick={() => void approveJoin(j)} data-testid="join-approve">批准</button> <button className="btn btn-ghost" onClick={() => void rejectJoin(j)}>拒绝</button></td></tr>); })}
+        </tbody></table>
+        <div className="note" style={{ marginTop: 6 }}>员工在登录页点"员工申请加入"，填公司代码 {me?.company.short_code}。批准后他用自己设的手机号和 PIN 登录。</div>
+      </div>}
       <div className="toolbar">{canManage && <button className="btn btn-primary" onClick={openNew}>+ 加员工</button>}<span className="note">{msg}</span></div>
       {created && (
         <div style={{ background: '#FFF8E1', border: '2px solid var(--yellow)', borderRadius: 10, padding: 16, marginBottom: 16 }}>

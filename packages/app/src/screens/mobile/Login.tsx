@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
 import { useAuth } from '../../store/auth.js';
 import { Scanner } from '../../ui/Scanner.js';
@@ -44,6 +45,10 @@ export default function Login() {
         )}
         <div className="bottombar" style={{ marginTop: 8, borderTop: 0, justifyContent: 'center' }}>
           {(['zh', 'ms', 'en'] as Lang[]).map((l) => <button key={l} className={`lang ${lang === l ? 'active' : ''}`} onClick={() => setLang(l)}>{l === 'zh' ? '中' : l === 'ms' ? 'BM' : 'EN'}</button>)}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginTop: 8, paddingTop: 14, borderTop: '1px solid var(--hair)', fontSize: 'var(--fs-small)' }}>
+          <Link to="/join" style={{ color: 'var(--ink)', fontWeight: 600 }} data-testid="link-join">{lang === 'zh' ? '员工申请加入' : lang === 'ms' ? 'Pekerja: mohon sertai' : 'Staff: request to join'}</Link>
+          <Link to="/signup" style={{ color: 'var(--green)', fontWeight: 600 }} data-testid="link-signup">{lang === 'zh' ? '开新店（免费试用）' : lang === 'ms' ? 'Buka kedai baru (percuma)' : 'Open a new shop (free trial)'}</Link>
         </div>
       </div>
     </div>

@@ -28,12 +28,14 @@ import ReportsM from './screens/mobile/Reports.js';
 import CustomerCall from './screens/mobile/CustomerCall.js';
 import PosApp from './screens/pos/PosApp.js';
 import KioskApp from './screens/kiosk/KioskApp.js';
+import Signup from './screens/mobile/Signup.js';
+import Join from './screens/mobile/Join.js';
 
 export default function App() {
   const { me, loading } = useAuth(); const { t } = useT(); const loc = useLocation();
   if (loc.pathname.startsWith('/kiosk')) return <Routes><Route path="/kiosk/*" element={<KioskApp />} /></Routes>;
   if (loading) return <div className="mobile"><div className="empty">{t('loading')}</div></div>;
-  if (!me) return <Routes><Route path="*" element={<Login />} /></Routes>;
+  if (!me) return <Routes><Route path="/signup" element={<Signup />} /><Route path="/join" element={<Join />} /><Route path="*" element={<Login />} /></Routes>;
   if (me.sites.length > 1 && !me.site && !me.user.is_super_admin && loc.pathname !== '/select-site') return <Navigate to="/select-site" replace />;
   return (
     <Routes>
