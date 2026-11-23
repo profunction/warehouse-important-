@@ -11,19 +11,24 @@ export default function Products() {
   const [cats, setCats] = useState<any[]>([]); const [taxes, setTaxes] = useState<any[]>([]); const [sups, setSups] = useState<any[]>([]); const [locs, setLocs] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null); const [form, setForm] = useState<any>(empty); const [detail, setDetail] = useState<any | null>(null); const [msg, setMsg] = useState(''); const [newBc, setNewBc] = useState({ barcode: '', pack_qty: '1', barcode_type: 'UNIT' });
   const canCost = has('product.view_cost'); const canEdit = has('product.edit');
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null); const [busy, setBusy] = useState(false); const [bulkRes, setBulkRes] = useState<any | null>(null);
+  const uploadPhoto = async (id: string, f: File) => { const fd = new FormData(); fd.append('file', f); return api(`/products/${id}/photo`, { method: 'POST', body: fd, timeoutMs: 60000 }); };
+  const onPickPhoto = async (f: File | null | undefined) => { if (!f) return; if (!editing?.id) { setPendingPhoto(f); setForm({ ...form, photo_url: URL.createObjectURL(f) }); return; } setBusy(true); try { const r = await uploadPhoto(editing.id, f); setForm({ ...form, photo_url: r.photo_url }); setMsg('照片已更新'); await load(); } catch (e) { setMsg(errText(e)); } finally { setBusy(false); } };
+  const removePhoto = async () => { if (!editing?.id) { setPendingPhoto(null); setForm({ ...form, photo_url: '' }); return; } try { await api(`/products/${editing.id}/photo`, { method: 'DELETE' }); setForm({ ...form, photo_url: '' }); await load(); } catch (e) { setMsg(errText(e)); } };
+  const bulkUpload = async (files: FileList | null) => { if (!files?.length) return; setBusy(true); setBulkRes(null); const all = Array.from(files); const out = { matched: [] as any[], unmatched: [] as string[] }; try { for (let i = 0; i < all.length; i += 20) { const fd = new FormData(); for (const f of all.slice(i, i + 20)) fd.append('files', f, f.name); const r = await api('/products/photos/bulk', { method: 'POST', body: fd, timeoutMs: 120000 }); out.matched.push(...r.matched); out.unmatched.push(...r.unmatched); setBulkRes({ ...out, done: Math.min(i + 20, all.length), total: all.length }); } await load(); } catch (e) { setMsg(errText(e)); } finally { setBusy(false); } };
   const load = async () => { try { setRows(await api(`/products?search=${encodeURIComponent(search)}&limit=100&offset=${offset}${showAll ? '&active=all' : ''}`)); } catch (e) { setMsg(errText(e)); } };
   useEffect(() => { void load(); }, [search, showAll, offset]);
   useEffect(() => { Promise.all([api('/categories'), api('/tax-codes'), api('/suppliers').catch(() => []), api('/locations')]).then(([c, t, s, l]) => { setCats(c); setTaxes(t); setSups(s); setLocs(l); }).catch(() => {}); }, []);
-  const openNew = () => { setEditing({}); setForm({ ...empty, tax_code_id: taxes.find((t) => t.is_default)?.id ?? '' }); setDetail(null); };
-  const openEdit = async (p: any) => { const d = await api(`/products/${p.id}`); setDetail(d); setEditing(d); setForm({ ...empty, ...Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v ?? ''])) }); };
+  const openNew = () => { setPendingPhoto(null); setEditing({}); setForm({ ...empty, tax_code_id: taxes.find((t) => t.is_default)?.id ?? '' }); setDetail(null); };
+  const openEdit = async (p: any) => { setPendingPhoto(null); const d = await api(`/products/${p.id}`); setDetail(d); setEditing(d); setForm({ ...empty, ...Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v ?? ''])) }); };
   const num = (v: any) => (v === '' || v == null ? undefined : Number(v));
   const save = async () => {
     setMsg('');
-    const body: any = { name_zh: form.name_zh || null, name_ms: form.name_ms || null, name_en: form.name_en || null, category_id: form.category_id, unit: form.unit, is_weighed: form.unit === 'KG', plu_code: form.plu_code || null, sell_price: num(form.sell_price), tax_code_id: form.tax_code_id || undefined, min_level: num(form.min_level), reorder_qty: num(form.reorder_qty), reorder_days: num(form.reorder_days), default_supplier_id: form.default_supplier_id || null, default_location_id: form.default_location_id || null, shelf_life_days: num(form.shelf_life_days) ?? null, photo_url: form.photo_url || null };
+    const body: any = { name_zh: form.name_zh || null, name_ms: form.name_ms || null, name_en: form.name_en || null, category_id: form.category_id, unit: form.unit, is_weighed: form.unit === 'KG', plu_code: form.plu_code || null, sell_price: num(form.sell_price), tax_code_id: form.tax_code_id || undefined, min_level: num(form.min_level), reorder_qty: num(form.reorder_qty), reorder_days: num(form.reorder_days), default_supplier_id: form.default_supplier_id || null, default_location_id: form.default_location_id || null, shelf_life_days: num(form.shelf_life_days) ?? null, photo_url: (form.photo_url || '').startsWith('blob:') ? undefined : (form.photo_url || null) };
     if (canCost && has('cost.edit')) body.cost_price = num(form.cost_price);
     try {
       if (editing?.id) { await api(`/products/${editing.id}`, { method: 'PUT', body }); setMsg('已保存'); }
-      else { if (form.barcode) body.barcode = form.barcode; const r = await api('/products', { body }); setMsg(`已新建 ${r.sku}`); }
+      else { if (form.barcode) body.barcode = form.barcode; body.photo_url = null; const r = await api('/products', { body }); if (pendingPhoto) { try { await uploadPhoto(r.id, pendingPhoto); } catch { /* 产品已建好，照片可以再传 */ } } setPendingPhoto(null); setMsg(`已新建 ${r.sku}`); }
       setEditing(null); await load();
     } catch (e) { setMsg(errText(e)); }
   };
@@ -38,8 +43,13 @@ export default function Products() {
         <input placeholder="搜索名称、拼音、条码、货号" value={search} onChange={(e) => { setOffset(0); setSearch(e.target.value); }} style={{ width: 320 }} />
         <label><input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} style={{ width: 'auto', minHeight: 0 }} /> 含停用</label>
         {canEdit && <button className="btn btn-primary" onClick={openNew}>+ 新建产品</button>}
+        {canEdit && <span className="btn btn-ghost" style={{ position: 'relative', overflow: 'hidden' }} title="文件名用条码或货号，例如 9556001234567.jpg">批量上传照片<input type="file" accept="image/*" multiple onChange={(e) => { void bulkUpload(e.target.files); e.target.value = ''; }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} data-testid="bulk-photo-input" /></span>}
         <span className="note">{msg}</span>
       </div>
+      {bulkRes && <div className="note" style={{ border: '1px solid var(--hair)', borderRadius: 10, padding: '10px 14px', marginBottom: 12, background: '#fff' }} data-testid="bulk-result">
+        <b>批量照片 {bulkRes.done}/{bulkRes.total}</b>：已配上 {bulkRes.matched.length} 张{bulkRes.unmatched.length > 0 && <>；{bulkRes.unmatched.length} 张找不到对应条码或货号：{bulkRes.unmatched.slice(0, 8).join('、')}{bulkRes.unmatched.length > 8 ? ' …' : ''}</>}
+        <span style={{ marginLeft: 8 }}>（文件名要等于条码或货号，例如 9556001234567.jpg）</span> <button className="btn btn-ghost" style={{ minHeight: 28 }} onClick={() => setBulkRes(null)}>关闭</button>
+      </div>}
       {editing && (
         <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
           <h2>{editing.id ? `编辑 ${editing.sku}` : '新建产品'}</h2>
@@ -54,7 +64,14 @@ export default function Products() {
             {F('min_level', '最低量', 'number', { disabled: !!editing.id && !has('minlevel.edit') })}{F('reorder_qty', '补货量', 'number', { disabled: !!editing.id && !has('minlevel.edit') })}{F('reorder_days', '补货天数', 'number')}
             <label>默认供应商<select value={form.default_supplier_id} onChange={(e) => setForm({ ...form, default_supplier_id: e.target.value })}><option value="">无</option>{sups.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
             <label>默认后仓位置<select value={form.default_location_id} onChange={(e) => setForm({ ...form, default_location_id: e.target.value })}><option value="">无</option>{locs.filter((l) => !l.is_virtual).map((l) => <option key={l.id} value={l.id}>{l.code}</option>)}</select></label>
-            {F('shelf_life_days', '保质期天数', 'number')}{F('photo_url', '照片 URL')}
+            {F('shelf_life_days', '保质期天数', 'number')}
+            <label>照片<div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 4 }}>
+              <div style={{ width: 88, height: 88, border: '1px solid var(--hair)', borderRadius: 10, overflow: 'hidden', background: '#fff', display: 'grid', placeItems: 'center', color: 'var(--muted)', flex: 'none' }}>{form.photo_url ? <img src={form.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 12 }}>没有照片</span>}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span className="btn btn-ghost" style={{ position: 'relative', overflow: 'hidden' }}>{busy ? '上传中…' : form.photo_url ? '换照片' : '上传照片'}<input type="file" accept="image/*" onChange={(e) => { void onPickPhoto(e.target.files?.[0]); e.target.value = ''; }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} data-testid="photo-input" /></span>
+                {form.photo_url && <button type="button" className="btn btn-ghost" onClick={() => void removePhoto()}>删除照片</button>}
+              </div>
+            </div><span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>手机拍、网上下载都可以，系统自动压成正方形白底</span></label>
             {!editing.id && F('barcode', '主条码（8 到 14 位）')}
           </div>
           <div className="toolbar" style={{ marginTop: 12 }}><button className="btn btn-primary" onClick={save} disabled={!form.category_id || !form.sell_price || form.min_level === '' || form.reorder_qty === ''}>保存</button><button className="btn btn-ghost" onClick={() => setEditing(null)}>取消</button></div>
@@ -78,14 +95,15 @@ export default function Products() {
         </div>
       )}
       <table>
-        <thead><tr><th>货号</th><th>主条码</th><th>名称</th><th>类别</th><th>单位</th>{canCost && <th>成本</th>}<th>售价</th><th>最低量</th><th>总库存</th><th>状态</th><th></th></tr></thead>
+        <thead><tr><th></th><th>货号</th><th>主条码</th><th>名称</th><th>类别</th><th>单位</th>{canCost && <th>成本</th>}<th>售价</th><th>最低量</th><th>总库存</th><th>状态</th><th></th></tr></thead>
         <tbody>
           {rows.map((p) => <tr key={p.id} style={{ opacity: p.is_active ? 1 : 0.5 }}>
+            <td style={{ width: 44, paddingTop: 6, paddingBottom: 6 }}><div style={{ width: 36, height: 36, borderRadius: 6, border: '1px solid var(--hair)', background: '#fff', overflow: 'hidden', display: 'grid', placeItems: 'center' }}>{p.photo_url ? <img src={p.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : null}</div></td>
             <td>{p.sku}</td><td>{p.barcode ?? '—'}</td><td>{n(p)}</td><td>{cats.find((c) => c.id === p.category_id)?.name_zh ?? ''}</td><td>{p.unit === 'KG' ? '公斤' : '件'}</td>{canCost && <td>{fmtMoney(p.cost_price)}</td>}<td>{fmtMoney(p.sell_price)}</td><td>{fmtQty(p.min_level)}</td><td>{fmtQty(p.total_qty)}</td>
             <td>{p.is_active ? <span className="ok">启用</span> : <span className="err">停用</span>}</td>
             <td style={{ whiteSpace: 'nowrap' }}>{canEdit && <><button className="btn btn-ghost" onClick={() => openEdit(p)}>编辑</button> <button className="btn btn-ghost" onClick={() => toggleActive(p)}>{p.is_active ? '停用' : '启用'}</button></>}</td>
           </tr>)}
-          {rows.length === 0 && <tr><td colSpan={11} className="note">没有产品</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={12} className="note">没有产品</td></tr>}
         </tbody>
       </table>
       <div className="toolbar" style={{ marginTop: 10 }}><button className="btn btn-ghost" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 100))}>上一页</button><button className="btn btn-ghost" disabled={rows.length < 100} onClick={() => setOffset(offset + 100)}>下一页</button><span className="note">每页 100</span></div>

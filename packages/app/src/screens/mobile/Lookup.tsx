@@ -11,7 +11,14 @@ import { kvGet } from '../../offline/db.js';
 
 export default function Lookup() {
   const { t, n, lang } = useT(); const { has } = useAuth(); const nav = useNavigate();
-  const [res, setRes] = useState<any | null>(null); const [err, setErr] = useState<string | null>(null); const [offline, setOffline] = useState(false);
+  const [res, setRes] = useState<any | null>(null); const [err, setErr] = useState<string | null>(null); const [offline, setOffline] = useState(false); const [uploading, setUploading] = useState(false);
+  const L = (zh: string, ms: string, en: string) => (lang === 'zh' ? zh : lang === 'ms' ? ms : en);
+  const takePhoto = async (f: File | null | undefined) => {
+    if (!f || !res) return; if (!isOnline()) { setErr(t('needs_network')); return; }
+    setUploading(true);
+    try { const fd = new FormData(); fd.append('file', f); const r = await api(`/products/${res.product.id}/photo`, { method: 'POST', body: fd, timeoutMs: 60000 }); setRes({ ...res, product: { ...res.product, photo_url: r.photo_url } }); await db.product.update(res.product.id, { photo_url: r.photo_url }); }
+    catch (e: any) { setErr(e?.text?.(lang) ?? String(e?.message ?? e)); } finally { setUploading(false); }
+  };
   const onScan = async (code: string) => {
     if (isOnline()) {
       try { const r = await api(`/stock/lookup/${encodeURIComponent(code)}`); setRes({ ...r, barcode: code }); setOffline(false); return; } catch (e: any) { if (e?.status === 404) { setErr(t('not_in_system')); return; } }
@@ -38,7 +45,10 @@ export default function Lookup() {
           {res.locations.map((l: any) => <div className="kv" key={l.code}><span><span className="label-chip" style={{ background: l.zone_color ?? '#616161' }}>{l.code}</span>{l.earliest_expiry ? <span style={{ color: '#777', fontSize: 'var(--fs-small)' }}> · {t('expiry')} {l.earliest_expiry}</span> : null}</span><b>{l.qty}</b></div>)}
           {res.shelves?.length > 0 && <><div className="section">{t('shelves')}</div><div className="kv"><span>{res.shelves.map((s: any) => s.code + (s.is_primary ? ' ★' : '')).join('，')}</span></div></>}
           {res.recent_movements?.length > 0 && <><div className="section">{t('recent')}</div>{res.recent_movements.map((m: any) => <div className="kv" key={m.id}><span className="k">{new Date(m.performed_at).toLocaleString(lang === 'zh' ? 'zh-CN' : lang === 'ms' ? 'ms-MY' : 'en-MY', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} {t('reason_' + m.reason)} {m.from_code}→{m.to_code}</span><b>{m.qty}</b></div>)}</>}
-          <div className="confirm-wrap"><button className="btn btn-primary btn-xl" onClick={() => setRes(null)}>{t('next')}</button></div>
+          <div className="confirm-wrap">
+            {has('product.edit') && <label className="btn btn-secondary" style={{ position: 'relative', overflow: 'hidden' }} data-testid="lookup-photo"><Icon name={I.Camera} size={20} /> {uploading ? L('上传中…', 'Memuat naik…', 'Uploading…') : res.product.photo_url ? L('换照片', 'Tukar gambar', 'Change photo') : L('拍照片', 'Ambil gambar', 'Take photo')}<input type="file" accept="image/*" capture="environment" onChange={(e) => { void takePhoto(e.target.files?.[0]); e.target.value = ''; }} style={{ position: 'absolute', inset: 0, opacity: 0 }} /></label>}
+            <button className="btn btn-primary btn-xl" onClick={() => setRes(null)}>{t('next')}</button>
+          </div>
         </div>
       )}
     </Page>
