@@ -13,7 +13,7 @@ export default function PosReturns() {
   const { t, n, lang } = useT(); const nav = useNavigate(); const [sp] = useSearchParams();
   const [no, setNo] = useState(sp.get('receipt') ?? ''); const [sale, setSale] = useState<any | null>(null); const [sel, setSel] = useState<Record<string, number>>({}); const [reason, setReason] = useState(''); const [err, setErr] = useState<string | null>(null); const [done, setDone] = useState<any | null>(null); const [busy, setBusy] = useState(false); const [qtyFor, setQtyFor] = useState<string | null>(null); const [kp, setKp] = useState('');
   const find = async (v = no) => {
-    const code = v.trim().replace(/^RCPT:/i, ''); if (!code) return;
+    const raw = v.trim(); const urlM = raw.match(/\/e\/[^/]+\/([^/?#]+)/); const code = urlM ? decodeURIComponent(urlM[1]) : raw.replace(/^RCPT:/i, ''); if (!code) return;
     try { const s = await api(`/pos/sales/by-receipt/${encodeURIComponent(code)}`); setSale(s); setSel({}); fx.scanOk(); } catch (e: any) { setErr(e instanceof ApiError ? e.text(lang) : t('needs_network')); }
   };
   useEffect(() => { if (sp.get('receipt')) void find(sp.get('receipt')!); }, []);   // eslint-disable-line react-hooks/exhaustive-deps

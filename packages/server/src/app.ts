@@ -17,6 +17,7 @@ import { adminRoutes } from './routes/admin.js';
 import { fileRoutes } from './routes/files.js';
 import { mediaRoutes } from './routes/media.js';
 import { signupRoutes } from './routes/signup.js';
+import { customerSelfRoutes } from './routes/customerSelf.js';
 import { ordersRoutes } from './routes/orders.js';
 import { receivingRoutes } from './routes/receiving.js';
 import { transfersRoutes } from './routes/transfers.js';
@@ -70,6 +71,7 @@ export function buildApp() {
     await api.register(fileRoutes);
     await api.register(mediaRoutes);
     await api.register(signupRoutes);
+    await api.register(customerSelfRoutes);
     await api.register(ordersRoutes);
     await api.register(receivingRoutes);
     await api.register(transfersRoutes);

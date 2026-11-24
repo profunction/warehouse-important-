@@ -29,10 +29,14 @@ import CustomerCall from './screens/mobile/CustomerCall.js';
 import PosApp from './screens/pos/PosApp.js';
 import KioskApp from './screens/kiosk/KioskApp.js';
 import Signup from './screens/mobile/Signup.js';
+import CustomerSelf from './screens/public/CustomerSelf.js';
+import ReceiptEinvoice from './screens/public/ReceiptEinvoice.js';
 import Join from './screens/mobile/Join.js';
 
 export default function App() {
   const { me, loading } = useAuth(); const { t } = useT(); const loc = useLocation();
+  // 顾客自助页：不管有没有登录都直接显示
+  if (/^\/(c|e)\//.test(loc.pathname)) return <Routes><Route path="/c/:code" element={<CustomerSelf />} /><Route path="/e/:code/:receipt" element={<ReceiptEinvoice />} /></Routes>;
   if (loc.pathname.startsWith('/kiosk')) return <Routes><Route path="/kiosk/*" element={<KioskApp />} /></Routes>;
   if (loading) return <div className="mobile"><div className="empty">{t('loading')}</div></div>;
   if (!me) return <Routes><Route path="/signup" element={<Signup />} /><Route path="/join" element={<Join />} /><Route path="*" element={<Login />} /></Routes>;

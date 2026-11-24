@@ -67,6 +67,7 @@ export const ERROR_MESSAGES: Record<string, Tri> = {
   EINVOICE_STATE: { zh: '电子发票状态不允许此操作', ms: 'Status e-invois tidak membenarkan', en: 'E-invoice status does not allow this' },
   EINVOICE_CANCEL_WINDOW: { zh: '超过 72 小时，不能取消，请开 Credit Note', ms: 'Melebihi 72 jam, keluarkan Nota Kredit', en: 'Past 72 hours, issue a credit note instead' },
   EINVOICE_BUYER_REQUIRED: { zh: '电子发票需要买家 TIN 或身份证号', ms: 'E-invois perlu TIN atau no. pengenalan pembeli', en: 'E-invoice needs buyer TIN or ID number' },
+  EINVOICE_EXPIRED: { zh: '已经超过 72 小时，这张收据会并入月底的合并电子发票', ms: 'Melebihi 72 jam, resit ini akan dimasukkan dalam e-invois disatukan', en: 'Over 72 hours; this receipt goes into the monthly consolidated e-invoice' },
   INTERNAL: { zh: '系统出错了，已记录', ms: 'Ralat sistem, telah direkod', en: 'System error, logged' },
 };
 export function msg(code: string, lang: Lang = 'zh'): string {

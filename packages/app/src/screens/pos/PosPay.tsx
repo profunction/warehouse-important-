@@ -35,7 +35,7 @@ export default function PosPay() {
     if (busy) return; setBusy(true);
     try {
       const r = await submitSale(me!, { terminal_code: pos.terminal, session_id: pos.session?.id ?? null, lines: pos.lines, payments, customer: pos.customer, sale_type: saleType, hold_id: pos.holdId }, lang);
-      pos.setLastSale({ ...r.sale, offline: r.offline }); pos.clear(); fx.done(); nav('/pos/done', { replace: true });
+      pos.setLastSale({ ...r.sale, offline: r.offline, member: pos.customer?.mode === 'MEMBER' ? pos.customer : null }); pos.clear(); fx.done(); nav('/pos/done', { replace: true });
     } catch (e: any) { setErr(e instanceof ApiError ? (e.code === 'NETWORK' ? t('needs_network') : e.text(lang)) : String(e?.message ?? e)); }
     finally { setBusy(false); }
   };
@@ -82,7 +82,7 @@ export default function PosPay() {
           <Keypad value={amt} onChange={setAmt} />
           <div className="pos-actions">
             <Btn k="pos_add_payment" color="grey" onClick={() => addPay()} disabled={!(entered > 0) || (method !== 'CASH' && entered >= remaining)} />
-            {pos.customer ? <Btn color="blue" icon={<Building2 size={24} />} onClick={chargeAccount} disabled={busy} testid="pay-credit">{t('pos_charge_account')} <small>{pos.customer.name}</small></Btn> : <span />}
+            {pos.customer && pos.customer.mode !== 'MEMBER' ? <Btn color="blue" icon={<Building2 size={24} />} onClick={chargeAccount} disabled={busy} testid="pay-credit">{t('pos_charge_account')} <small>{pos.customer.name}</small></Btn> : <span />}
             <Btn color="pay" icon={<CreditCard size={30} />} onClick={confirm} disabled={busy} testid="pay-confirm">{t('pos_confirm_pay')} <small>{t2('pos_confirm_pay')}</small></Btn>
           </div>
         </div>

@@ -1,6 +1,7 @@
 // M4 手动调整：扫产品 → 扫货位 → 输新数量 → 选原因 → 拍照 → 送审批。需要网络（审批）。
 // 照片不走上传接口（第一阶段没有），在手机上缩到 ≤800px 的 JPEG 以 data URL 放进 photo_url（通常 <80KB）。
 import { useRef, useState } from 'react';
+import { uuidv7 } from '../../offline/sync.js';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../../i18n/index.js';
 import { Icon, I } from '../../ui/icons.js';
@@ -31,7 +32,7 @@ export default function Adjust() {
   const newQty = Number(qty);
   const submit = async () => {
     if (!cur || !loc || !reason || !photo) return; setBusy(true);
-    try { const r = await api('/adjustments', { body: { client_id: crypto.randomUUID(), product_id: cur.product.id, location_id: loc.id, new_qty: newQty, reason, photo_url: photo, note: note || undefined } }); setResult(r); fx.done(); setStep('done'); }
+    try { const r = await api('/adjustments', { body: { client_id: uuidv7(), product_id: cur.product.id, location_id: loc.id, new_qty: newQty, reason, photo_url: photo, note: note || undefined } }); setResult(r); fx.done(); setStep('done'); }
     catch (e) { setErr(e instanceof ApiError ? e.text(lang) : String(e)); } finally { setBusy(false); }
   };
   const reset = () => { setCur(null); setLoc(null); setQty(''); setReason(null); setPhoto(null); setNote(''); setStep('prod'); };

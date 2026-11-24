@@ -16,9 +16,9 @@ import { lineTotal, lineDiscount, cartNet, roundTo, type CartLine } from '../../
 import { PosTop } from './PosApp.js';
 import { usePos } from './posStore.js';
 import { Keypad, Amount, Overlay, Btn, Tri, money, r2 } from './PosUi.js';
-import { Scale, Percent, ShieldCheck, Search, Package, Trash2, PauseCircle, Undo2, Building2, Sigma, Hash, Minus, Plus, X, ScanLine, ListOrdered } from 'lucide-react';
+import { Scale, Percent, ShieldCheck, Search, Package, Trash2, PauseCircle, Undo2, Building2, Sigma, Hash, Minus, Plus, X, ScanLine, ListOrdered, UserRound } from 'lucide-react';
 
-type Overlay = null | { kind: 'weigh'; product: CProduct; barcode?: string | null } | { kind: 'qty'; key: string } | { kind: 'discount'; key: string } | { kind: 'pin'; key: string; pct: number } | { kind: 'search'; q: string; results: CProduct[] };
+type Overlay = null | { kind: 'member'; found?: any[]; searched?: boolean } | { kind: 'weigh'; product: CProduct; barcode?: string | null } | { kind: 'qty'; key: string } | { kind: 'discount'; key: string } | { kind: 'pin'; key: string; pct: number } | { kind: 'search'; q: string; results: CProduct[] };
 
 export default function PosMain() {
   const { me } = useAuth(); const { t, t2, n, lang } = useT(); const nav = useNavigate();
@@ -45,6 +45,7 @@ export default function PosMain() {
   const handleCode = async (raw: string) => {
     const code = raw.trim(); if (!code) return;
     if (/^RCPT:/i.test(code)) { nav(`/pos/returns?receipt=${encodeURIComponent(code.slice(5))}`); return; }
+    { const m = code.match(/\/e\/[^/]+\/([^/?#]+)/); if (m) { nav(`/pos/returns?receipt=${encodeURIComponent(decodeURIComponent(m[1]))}`); return; } }
     if (/^\d{8,14}$/.test(code)) {
       const r = await resolveProduct(code);
       if (r) { addResolved(r.product as CProduct, { pack_qty: r.pack_qty, weight_kg: r.weight_kg, barcode: code }); return; }
@@ -81,6 +82,12 @@ export default function PosMain() {
       pos.clear(); fx.done(); setToast(t('pos_held_ok', { code: r.hold_code })); void bridge.print(`${t('pos_hold')} ${r.hold_code}\n${new Date().toLocaleString()}\n${money(r.total)}\n`, null);
     } catch (e: any) { setErr(e instanceof ApiError ? e.text(lang) : t('needs_network')); }
   };
+  const findMember = async () => {
+    const ph = kp.replace(/\D/g, ''); if (ph.length < 4) return;
+    try { const rows: any[] = await api(`/pos/customers?search=${encodeURIComponent(ph)}&limit=10`); setOv({ kind: 'member', found: rows.filter((c) => (c.phone ?? '').replace(/\D/g, '').includes(ph)), searched: true }); }
+    catch (e: any) { setErr(e instanceof ApiError ? e.text(lang) : t('needs_network')); }
+  };
+  const pickMember = (c: any) => { pos.setCustomer({ id: c.id, name: c.name, phone: c.phone, code: c.code, mode: 'MEMBER', einvoice_profile: c.einvoice_profile, credit_status: c.credit_status, credit_limit: Number(c.credit_limit ?? 0), balance: Number(c.balance ?? 0), credit_available: Number(c.credit_available ?? 0) }); fx.scanOk(); setOv(null); setToast(`${lang === 'zh' ? '会员' : 'Member'} ${c.name}`); };
   const lineQtyText = (l: CartLine) => l.product.is_weighed ? `${Number(l.weight_kg ?? 0).toFixed(3)} kg × ${money(l.unit_price)}` : `${l.qty} × ${money(l.unit_price)}`;
 
   return (
@@ -114,8 +121,8 @@ export default function PosMain() {
           <header>
             <div><b>{t('pos_current_order')}</b><span>{t('pos_items', { n: pos.lines.reduce((a, l) => a + (l.product.is_weighed ? 1 : l.qty), 0) })}</span></div>
             {pos.customer
-              ? <button className="pos2-cust on" onClick={() => pos.setCustomer(null)} title={t('pos_clear_customer')}><Building2 size={16} />{pos.customer.name}<X size={14} /></button>
-              : <button className="pos2-cust" onClick={() => nav('/pos/b2b')} data-testid="pos-b2b"><Building2 size={16} />{t('pos_b2b')}</button>}
+              ? <button className="pos2-cust on" onClick={() => pos.setCustomer(null)} title={t('pos_clear_customer')} data-testid="pos-customer-chip">{pos.customer.mode === 'MEMBER' ? <UserRound size={16} /> : <Building2 size={16} />}{pos.customer.name}<X size={14} /></button>
+              : <span style={{ display: 'flex', gap: 6 }}><button className="pos2-cust" onClick={() => { setKp(''); setOv({ kind: 'member' }); }} data-testid="pos-member"><UserRound size={16} />{lang === 'zh' ? '会员' : lang === 'ms' ? 'Ahli' : 'Member'}</button><button className="pos2-cust" onClick={() => nav('/pos/b2b')} data-testid="pos-b2b"><Building2 size={16} />{t('pos_b2b')}</button></span>}
           </header>
           <div className="pos2-lines" data-testid="pos-lines">
             {pos.lines.length === 0 && <div className="pos2-empty"><Package size={36} strokeWidth={1.2} /><div>{t('pos_empty_cart')}</div></div>}
@@ -145,6 +152,19 @@ export default function PosMain() {
         </aside>
       </div>
 
+      {ov?.kind === 'member' && (
+        <Overlay onClose={() => setOv(null)}>
+          <div><h2 style={{ margin: 0 }}>{lang === 'zh' ? '会员' : lang === 'ms' ? 'Ahli' : 'Member'}<small style={{ display: 'block', fontSize: 13, color: 'var(--muted)', fontWeight: 400 }}>{lang === 'zh' ? '输顾客手机号' : lang === 'ms' ? 'Masukkan nombor telefon pelanggan' : "Enter the customer's phone number"}</small></h2></div>
+          <div className="pos-cols">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Amount label={lang === 'zh' ? '手机号' : 'Phone'} value={kp} prefix="" placeholder="012…" testid="member-phone" />
+              {ov.searched && (ov.found?.length ? <div className="pos-list">{ov.found.map((c: any) => <button key={c.id} className="pos-card" onClick={() => pickMember(c)} data-testid="member-result"><div><div style={{ fontWeight: 700 }}>{c.name}</div><div className="s">{c.phone} · {c.code ?? ''}{c.einvoice_profile ? (lang === 'zh' ? ' · 有电子发票资料' : ' · e-invoice saved') : ''}</div></div><div className="r">{c.credit_status === 'APPROVED' ? (lang === 'zh' ? '可记账' : 'Credit') : ''}</div></button>)}</div>
+                : <div className="pos-bar warn" style={{ borderRadius: 10 }}>{lang === 'zh' ? '没有这个会员。请顾客扫柜台二维码自己登记，一分钟就好。' : lang === 'ms' ? 'Tiada ahli. Minta pelanggan imbas QR kaunter untuk daftar.' : 'No member found. Ask the customer to scan the counter QR to sign up.'}</div>)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}><Keypad value={kp} onChange={setKp} allowDecimal={false} onEnter={() => void findMember()} /><Btn color="pay" onClick={() => void findMember()} testid="member-find">{lang === 'zh' ? '找会员' : lang === 'ms' ? 'Cari ahli' : 'Find member'}</Btn><Btn k="cancel" color="ghost" onClick={() => setOv(null)} /></div>
+          </div>
+        </Overlay>
+      )}
       {ov?.kind === 'weigh' && (
         <Overlay onClose={() => setOv(null)}>
           <Tri k="pos_weigh" /><div className="hint">{n(ov.product)} · {money(ov.product.sell_price)}/{t('pos_kg')}</div>

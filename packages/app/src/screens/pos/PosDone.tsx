@@ -32,6 +32,8 @@ export default function PosDone() {
       else setMsg(e instanceof ApiError ? e.text(lang) : String(e?.message ?? e));
     } finally { setBusy(false); }
   };
+  const prof = s?.member?.einvoice_profile;
+  const useProfile = async () => { if (!prof) return; setBuyer({ tin: prof.tin ?? '', id_type: prof.id_type ?? 'NRIC', id_no: prof.id_no ?? '', name: prof.name ?? s.member.name, email: prof.email ?? '' }); setBusy(true); try { if (s.offline || !isOnline()) throw new ApiError(0, 'NETWORK', {}); await api(`/einvoice/sales/${s.id}`, { body: { buyer: { tin: prof.tin ?? null, id_type: prof.id_type ?? null, id_no: prof.id_no ?? null, name: prof.name ?? s.member.name, email: prof.email ?? null, phone: prof.phone ?? null, address: prof.address ?? null } } }); setMsg(t('pos_einvoice_sent')); } catch (e: any) { setMsg(e instanceof ApiError && (e.status === 0 || e.code === 'NETWORK') ? t('pos_einvoice_later') : e instanceof ApiError ? e.text(lang) : String(e?.message ?? e)); } finally { setBusy(false); } };
   const onTin = (v: string) => { // 顾客 MyInvois 二维码常见格式：TIN|IDTYPE|IDNO 或纯 TIN
     const m = v.split('|'); if (m.length >= 3) setBuyer({ ...buyer, tin: m[0], id_type: m[1].toUpperCase(), id_no: m[2] }); else setBuyer({ ...buyer, tin: v });
   };
@@ -45,7 +47,8 @@ export default function PosDone() {
         {msg && <div className="sub" data-testid="done-msg">{msg}</div>}
         <div className="btns">
           <Btn color="ghost" icon={<Printer size={26} />} onClick={() => void print()} testid="done-print">{t('pos_print_receipt')} <small>{t2('pos_print_receipt')}</small></Btn>
-          <Btn color="ghost" icon={<FileText size={26} />} onClick={() => setEin(true)} testid="done-einvoice">{t('pos_want_einvoice')} <small>{t2('pos_want_einvoice')}</small></Btn>
+          {prof ? <Btn color="ghost" icon={<FileText size={26} />} onClick={() => void useProfile()} disabled={busy} testid="done-einvoice-member">{lang === 'zh' ? '用会员资料开电子发票' : lang === 'ms' ? 'E-invois guna maklumat ahli' : 'e-Invoice with member details'} <small>{s.member.name}</small></Btn>
+            : <Btn color="ghost" icon={<FileText size={26} />} onClick={() => setEin(true)} testid="done-einvoice">{t('pos_want_einvoice')} <small>{s.einvoice_url ? (lang === 'zh' ? '或让顾客扫收据二维码自己填' : lang === 'ms' ? 'atau pelanggan imbas QR resit' : 'or customer scans receipt QR') : t2('pos_want_einvoice')}</small></Btn>}
           <Btn color="ghost" icon={<X size={26} />} onClick={() => nav('/pos', { replace: true })} testid="done-no-receipt">{t('pos_no_receipt')} <small>{t2('pos_no_receipt')}</small></Btn>
         </div>
         <button className="pos-btn brass row next" style={{ minHeight: 96, fontSize: 30 }} onClick={() => nav('/pos', { replace: true })} data-testid="done-next"><ArrowRight size={32} /> {t('pos_next_customer')} <small>{t2('pos_next_customer')}</small></button>

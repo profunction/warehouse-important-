@@ -6,7 +6,7 @@ import { getTerminal, setTerminal as saveTerminal, posSettings, type CartLine } 
 import { bridge } from '../../pos/bridge.js';
 import { uuidv7 } from '../../offline/sync.js';
 
-export interface PosCustomer { id: string; name: string; credit_available?: number | null; credit_limit?: number; balance?: number }
+export interface PosCustomer { id: string; name: string; credit_available?: number | null; credit_limit?: number; balance?: number; mode?: 'MEMBER' | 'B2B'; phone?: string | null; code?: string | null; einvoice_profile?: any; credit_status?: string }
 export interface PosSettings { cash_rounding: number; cashier_discount_max_pct: number; scale_barcode_format: any }
 interface State { terminal: string; session: any | null; sessionLoading: boolean; lines: CartLine[]; selected: string | null; customer: PosCustomer | null; saleType: 'RETAIL' | 'B2B'; lastSale: any | null; settings: PosSettings; holdId: string | null }
 interface Actions {
@@ -55,7 +55,7 @@ export function PosProvider({ children }: { children: ReactNode }) {
   }, []);
   const upd = (key: string, f: (l: CartLine) => CartLine) => setLines((ls) => ls.map((l) => (l.key === key ? f(l) : l)));
   const v = useMemo<State & Actions>(() => ({
-    terminal, session, sessionLoading, lines, selected, customer, saleType: customer ? 'B2B' : 'RETAIL', lastSale, settings, holdId,
+    terminal, session, sessionLoading, lines, selected, customer, saleType: customer && customer.mode !== 'MEMBER' ? 'B2B' : 'RETAIL', lastSale, settings, holdId,
     setTerminal, setSession, refreshSession: () => refreshSession(), addProduct,
     setQty: (key, qty) => upd(key, (l) => ({ ...l, qty: Math.max(0.001, qty) })), setWeight: (key, kg) => upd(key, (l) => ({ ...l, weight_kg: kg })),
     removeLine: (key) => { setLines((ls) => ls.filter((l) => l.key !== key)); setSelected((s) => (s === key ? null : s)); },

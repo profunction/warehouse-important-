@@ -15,6 +15,11 @@ export default function Customers() {
   const [form, setForm] = useState<any | null>(null); const [msg, setMsg] = useState(''); const [ok, setOk] = useState('');
   const [invoices, setInvoices] = useState<any[]>([]); const [invStatus, setInvStatus] = useState(''); const [aging, setAging] = useState<any | null>(null);
   const [newInv, setNewInv] = useState<any | null>(null); const [pay, setPay] = useState<any | null>(null); const [month, setMonth] = useState(thisMonth());
+  const [apps, setApps] = useState<any[]>([]); const [appPick, setAppPick] = useState<Record<string, { limit: string; terms: string }>>({}); const [qr, setQr] = useState<{ src: string; url: string } | null>(null);
+  const loadApps = async () => { try { setApps(await api('/customers/credit-applications')); } catch { /* 没权限或旧服务器 */ } };
+  useEffect(() => { void loadApps(); }, []);
+  const decide = async (a: any, approve: boolean) => { const p = appPick[a.id] ?? { limit: String(Number(a.credit_requested_limit ?? 0)), terms: String(a.credit_requested_terms ?? 30) }; if (!approve && !window.confirm(`拒绝 ${a.name} 的记账申请？`)) return; try { await api(`/customers/${a.id}/credit-decision`, { body: { approve, credit_limit: Number(p.limit), credit_terms_days: Number(p.terms) } }); say(approve ? `${a.name} 已开通记账，信用额 RM ${Number(p.limit).toFixed(2)}，${p.terms} 天` : `已拒绝 ${a.name}`); await Promise.all([loadApps(), load()]); } catch (e) { fail(e); } };
+  const showQr = async () => { try { const r: Response = await api(`/customers/self-register-qr?origin=${encodeURIComponent(window.location.origin)}`, { raw: true }); const blob = await r.blob(); setQr({ src: URL.createObjectURL(blob), url: r.headers.get('X-Url') ?? '' }); } catch (e) { fail(e); } };
   const say = (t: string) => { setOk(t); setMsg(''); setTimeout(() => setOk(''), 4000); };
   const fail = (e: any) => { setMsg(errText(e)); setOk(''); };
   const load = async () => { try { setRows(await api(`/customers?search=${encodeURIComponent(q)}`)); } catch (e) { fail(e); } };
@@ -45,6 +50,22 @@ export default function Customers() {
   return (
     <div>
       <h1>客户与应收</h1>
+      <div className="toolbar"><button className="btn btn-ghost" onClick={() => void showQr()} data-testid="self-qr-btn">顾客自助登记二维码</button><span className="note">贴在柜台：顾客扫码自己登记会员、存电子发票资料、申请企业记账</span></div>
+      {qr && <div style={{ display: 'flex', gap: 18, alignItems: 'center', border: '1px solid var(--hair)', borderRadius: 12, padding: 14, background: '#fff', marginBottom: 14 }} data-testid="self-qr">
+        <img src={qr.src} alt="顾客登记二维码" style={{ width: 160, height: 160 }} />
+        <div style={{ display: 'grid', gap: 6 }}><b>扫码登记会员 · Imbas untuk daftar · Scan to sign up</b><code style={{ userSelect: 'all', fontSize: 13 }}>{qr.url}</code><span className="note">右键图片另存后打印，或截图贴在柜台。网址要是顾客手机打得开的（公网或同一个 Wi-Fi）。</span><div><a className="btn btn-ghost" href={qr.src} download="customer-qr.png">下载图片</a> <button className="btn btn-ghost" onClick={() => setQr(null)}>关闭</button></div></div>
+      </div>}
+      {apps.length > 0 && <div style={{ border: '1px solid var(--brass)', borderRadius: 12, padding: '14px 16px', marginBottom: 16, background: '#fff' }} data-testid="credit-apps">
+        <h2 style={{ marginTop: 0 }}>企业记账申请（{apps.length}）</h2>
+        <table><thead><tr><th>公司</th><th>BRN / TIN</th><th>联系人</th><th>地址</th><th>申请额度</th><th>批准额度 RM</th><th>天数</th><th></th></tr></thead><tbody>
+          {apps.map((a) => { const p = appPick[a.id] ?? { limit: String(Number(a.credit_requested_limit ?? 0)), terms: String(a.credit_requested_terms ?? 30) }; const setP = (k: 'limit' | 'terms', v: string) => setAppPick({ ...appPick, [a.id]: { ...p, [k]: v } }); return (
+            <tr key={a.id} data-testid="credit-app-row"><td><b>{a.name}</b><div className="note">{a.code} · {new Date(a.updated_at ?? a.created_at).toLocaleDateString('zh-CN')}</div></td><td>{a.brn ?? '—'}<div className="note">{a.tin ?? ''}</div></td><td>{a.contact_name}<div className="note">{a.phone} · {a.email}</div></td><td style={{ maxWidth: 220 }}>{a.address?.line1 ?? ''}</td>
+              <td>RM {fmtMoney(a.credit_requested_limit)}<div className="note">{a.credit_requested_terms} 天{a.credit_note ? ` · ${a.credit_note}` : ''}</div></td>
+              <td><input type="number" value={p.limit} onChange={(e) => setP('limit', e.target.value)} style={{ width: 110 }} /></td>
+              <td><select value={p.terms} onChange={(e) => setP('terms', e.target.value)}>{[7, 14, 30, 60].map((d) => <option key={d} value={d}>{d}</option>)}</select></td>
+              <td style={{ whiteSpace: 'nowrap' }}>{has('invoice.manage') ? <><button className="btn btn-primary" onClick={() => void decide(a, true)} data-testid="credit-approve">批准</button> <button className="btn btn-ghost" onClick={() => void decide(a, false)}>拒绝</button></> : <span className="note">要老板或会计批</span>}</td></tr>); })}
+        </tbody></table>
+      </div>}
       {msg && <div className="err" style={{ marginBottom: 8 }}>{msg}</div>}{ok && <div className="ok" style={{ marginBottom: 8 }}>{ok}</div>}
       <div className="cards"><div className="stat"><div className="v">{rows.length}</div><div className="l">客户</div></div><div className="stat"><div className="v">{fmtMoney(custTotal)}</div><div className="l">应收余额 RM</div></div><div className={`stat ${overdueTotal > 0 ? 'warn' : ''}`}><div className="v">{fmtMoney(overdueTotal)}</div><div className="l">逾期 RM</div></div></div>
       <div className="tabs">{([['customers', '客户'], ['invoices', '发票'], ['aging', '账龄']] as const).map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>

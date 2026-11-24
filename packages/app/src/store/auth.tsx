@@ -4,6 +4,7 @@ import { api, tokens, APP_VERSION } from '../api/client.js';
 import { clearLocal, start as startSync, pull } from '../offline/sync.js';
 import { kvGet, kvSet } from '../offline/db.js';
 import { THEME_PRESETS, themeVars } from '@wh/shared';
+import { sha256Hex } from '../lib/sha256.js';
 export function applyTheme(theme: any) { const v = themeVars(theme); const r = document.documentElement; for (const [k, val] of Object.entries(v)) { if (k === '--btn-h') continue; r.style.setProperty(k, val); } r.style.removeProperty('--btn-h'); r.dataset.density = theme?.density ?? 'normal'; r.dataset.home = (theme?.home ?? 'list'); r.dataset.preset = theme?.preset ?? 'minimal'; r.dataset.nav = theme?.nav ?? (THEME_PRESETS[(theme?.preset ?? 'minimal') as keyof typeof THEME_PRESETS]?.defaults.nav ?? 'side'); }
 
 export interface AuthState { me: MeResponse | null; loading: boolean; offlineUser: { name: string; roles: string[]; home_buttons: any[] } | null }
@@ -12,7 +13,8 @@ type Ctx = AuthState & {
   has: (perm: string) => boolean; isBoss: boolean; isWeb: boolean;
 };
 const C = createContext<Ctx>(null!);
-async function sha(s: string) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
+// http://电脑IP 打开时没有 crypto.subtle，用纯 JS 版本兜底（以前这里会让登录报"PIN 不对"）
+const sha = (s: string) => sha256Hex(s);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);

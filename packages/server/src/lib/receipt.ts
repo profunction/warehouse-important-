@@ -17,6 +17,7 @@ export interface ReceiptData {
   subtotal: number; discount_total: number; tax_amount: number; rounding: number; total: number; paid_total: number; change_amount: number;
   payments: ReceiptPayment[];
   einvoice_qr?: string | null; footer?: string | null;
+  qr_url?: string | null;   // 顾客扫码自己填电子发票资料的链接；没有公网地址时为空，二维码退回 RCPT:收据号
 }
 
 /** 终端显示宽度：全角 2 列 */
@@ -76,6 +77,7 @@ export function buildReceiptText(d: ReceiptData, width = 32): string {
   out.push(sep);
   out.push(center('谢谢 Terima kasih', W));
   if (d.footer) out.push(center(truncWidth(d.footer, W), W));
+  if (d.qr_url) out.push(center('扫码开电子发票 e-Invois', W));
   out.push(center(`RCPT:${d.receipt_no}`, W));
   return out.join('\n') + '\n';
 }
@@ -106,7 +108,7 @@ export function buildReceiptEscPos(d: ReceiptData, opts: { width?: number; openD
   const parts: Buffer[] = [escpos.init()];
   if (opts.openDrawer) parts.push(escpos.drawer());
   parts.push(escpos.align(0), escpos.text(text.replace(/\n/g, '\r\n')));
-  parts.push(escpos.align(1), escpos.qr(`RCPT:${d.receipt_no}`, 3), escpos.feed(1));
+  parts.push(escpos.align(1), escpos.qr(d.qr_url || `RCPT:${d.receipt_no}`, d.qr_url ? 4 : 3), escpos.feed(1));
   if (opts.einvoiceQr) parts.push(escpos.text('MyInvois\r\n'), escpos.qr(opts.einvoiceQr, 3), escpos.feed(1));
   parts.push(escpos.align(0), escpos.feed(3), escpos.cut());
   return Buffer.concat(parts);

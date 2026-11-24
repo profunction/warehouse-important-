@@ -19,6 +19,8 @@ import { createApproval, registerApprovalHandler } from '../lib/approvals.js';
 import { registerSyncHandler } from '../lib/syncHandlers.js';
 import { tgSend, tgSendToUser } from '../lib/telegram.js';
 import { buildReceiptText, buildReceiptEscPos, buildZReport, buildZReportEscPos, type ReceiptData } from '../lib/receipt.js';
+import { publicBase, receiptUrl } from '../lib/receiptLink.js';
+import { adminPool } from '../lib/db.js';
 import { config } from '../lib/config.js';
 import { signedFileUrl } from './files.js';
 
@@ -94,14 +96,15 @@ export async function loadSaleFull(tx: Tx, id: string, opts: { cost?: boolean } 
       coalesce((SELECT sum(rl.qty) FROM sale_line rl JOIN sale rs ON rs.id = rl.sale_id WHERE rs.original_sale_id = l.sale_id AND rs.sale_type = 'RETURN' AND rs.status = 'COMPLETED' AND rl.product_id = l.product_id AND rl.line_no = l.line_no), 0) AS returned_qty
     FROM sale_line l JOIN product p ON p.id = l.product_id LEFT JOIN location loc ON loc.id = l.from_location_id WHERE l.sale_id = $1 ORDER BY l.line_no`, [id])).rows;
   const payments = (await tx.query(`SELECT id, method, amount, tendered, reference, received_at, drawer_session_id, invoice_id FROM payment WHERE sale_id = $1 ORDER BY received_at, id`, [id])).rows;
-  const company = (await tx.query(`SELECT name, address, tin, sst_no FROM company WHERE id = $1`, [s.company_id])).rows[0];
+  const company = (await tx.query(`SELECT name, address, tin, sst_no, short_code, settings FROM company WHERE id = $1`, [s.company_id])).rows[0];
+  const qr_url = s.sale_type === 'RETURN' ? null : receiptUrl(publicBase(company.settings), company.short_code, s.company_id, s.receipt_no);
   const rd: ReceiptData = {
     company, site: { code: s.site_code, name: s.site_name }, terminal_code: s.terminal_code, cashier_name: s.cashier_name, receipt_no: s.receipt_no, sold_at: s.sold_at, sale_type: s.sale_type, customer_name: s.customer_name,
     lines: lines.map((l: any) => ({ name: l.name_zh || l.name_en || l.name_ms || l.sku, qty: l.qty, unit_price: l.unit_price, line_total: l.line_total, weight_kg: l.weight_kg, discount: l.discount, unit: l.unit })),
-    subtotal: s.subtotal, discount_total: s.discount_total, tax_amount: s.tax_amount, rounding: s.rounding, total: s.total, paid_total: s.paid_total, change_amount: s.change_amount, payments,
+    subtotal: s.subtotal, discount_total: s.discount_total, tax_amount: s.tax_amount, rounding: s.rounding, total: s.total, paid_total: s.paid_total, change_amount: s.change_amount, payments, qr_url,
   };
   const receipt_text = buildReceiptText(rd, 32);
-  return { ...s, lines, payments, receipt_text, receipt_text_80: buildReceiptText(rd, 48), escpos_base64: buildReceiptEscPos(rd, { openDrawer: payments.some((p: any) => p.method === 'CASH') }).toString('base64'), qr_content: `RCPT:${s.receipt_no}` };
+  return { ...s, lines, payments, receipt_text, receipt_text_80: buildReceiptText(rd, 48), escpos_base64: buildReceiptEscPos(rd, { openDrawer: payments.some((p: any) => p.method === 'CASH') }).toString('base64'), qr_content: qr_url ?? `RCPT:${s.receipt_no}`, einvoice_url: qr_url };
 }
 
 /** 建销售：服务器重算金额、扣库存、付款、班次合计、B2B 记账。幂等 client_id / external_ref。 */
@@ -401,13 +404,16 @@ export async function posRoutes(app: FastifyInstance) {
   });
   app.get('/pos/customers', { preHandler: requirePerm('pos.sell', 'pos.b2b') }, async (req) => {
     const q = z.object({ search: z.string().optional(), limit: z.coerce.number().max(100).default(30) }).parse(req.query);
-    return withCompany(cx(req), async (tx) => (await tx.query(`SELECT id, code, name, tin, phone, email, credit_terms_days, credit_limit, balance, (credit_limit - balance) AS credit_available FROM customer WHERE is_active AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR code ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%') ORDER BY name LIMIT $2`, [q.search || null, q.limit])).rows);
+    return withCompany(cx(req), async (tx) => (await tx.query(`SELECT id, code, name, tin, phone, email, credit_terms_days, credit_limit, balance, (credit_limit - balance) AS credit_available, is_member, credit_status, einvoice_profile FROM customer WHERE is_active AND ($1::text IS NULL OR name ILIKE '%' || $1 || '%' OR code ILIKE '%' || $1 || '%' OR phone ILIKE '%' || $1 || '%') ORDER BY name LIMIT $2`, [q.search || null, q.limit])).rows);
   });
 
   // ---------- 销售 ----------
   app.post('/pos/sales', { preHandler: requirePerm('pos.sell') }, async (req, reply) => {
     const b = saleSchema.parse(req.body);
     if (b.sale_type === 'B2B' && !hasPerm(req.ctx, 'pos.b2b')) throw new AppError(403, 'FORBIDDEN', { need: ['pos.b2b'] });
+    // 记下收银机用的公网地址，收据二维码要用（localhost 不记）
+    const origin = String(req.headers.origin ?? '');
+    if (origin && !/\/\/(localhost|127\.)/.test(origin) && req.ctx.settings?.public_url !== origin) { await adminPool.query(`UPDATE company SET settings = settings || jsonb_build_object('public_url', $2::text) WHERE id = $1`, [req.ctx.companyId, origin]); req.ctx.settings = { ...(req.ctx.settings ?? {}), public_url: origin }; }
     const r = await withCompany(cx(req), (tx) => createSale(tx, saleCtx(req.ctx, b.device_id), b, { source: 'OWN_POS' }));
     reply.status(r.duplicate ? 200 : 201);
     return stripCost(req.ctx, r);
